@@ -1,0 +1,74 @@
+# Plan: Multi-Turn Agent Status Updates via API
+
+## 1. Problem Statement
+Current agents execute all steps in a "black box" before returning the final response. For multi-step tasks (e.g., "perform 10 actions"), users need visibility into:
+1.  **The Plan**: What steps the agent *intends* to take.
+2.  **The Progress**: Real-time status updates as each step completes.
+
+## 2. Proposed Architecture
+
+We will transition from a synchronous REST API (`POST /chat`) to a **streaming architecture** using **Server-Sent Events (SSE)**.
+
+### 2.1 Backend Changes
+
+#### API Layer (`backend/app/api/chat.py`)
+- **New Endpoint**: `POST /api/v1/chat/stream`
+- **Mechanism**: StreamingResponse (FastAPI) yielding SSE-formatted data.
+- **Event Protocol**:
+  - `event: plan` -> Payload: list of steps `["Action 1", "Action 2", ...]`
+  - `event: status` -> Payload: `{"step_index": 0, "status": "running"|"completed"|"failed", "details": "..."}`
+  - `event: message` -> Payload: Final or intermediate partial text chunks.
+  - `event: error` -> Payload: Error details.
+
+#### Agent Layer
+- Modify `BaseAgent` to support an `astream_events` or callback interface.
+- **Agent State**: Track "planned_steps" and "current_step_index".
+- **LangGraph Integration**: Use LangGraph's native streaming capabilities (`stream_mode="updates"` or custom callback handlers) to emit events during node transitions.
+
+### 2.2 Frontend Changes
+
+#### Service Layer (`frontend/src/services/api.ts`)
+- Implement an `EventSource` or `fetch` with readable stream reader to consume the SSE endpoint.
+- Parse standard SSE format (`id`, `event`, `data`).
+
+#### UI Components
+- **ChatMessage Component**:
+  - Add support for a "structured thought process" view.
+  - If a `plan` event is received, render a stepper or checklist.
+  - Update the checklist items in real-time as `status` events arrive.
+
+## 3. Implementation Steps
+
+1.  **Define Event Schema**: Create shared types/schemas for `PlanEvent` and `StatusEvent`.
+2.  **Backend Prototype**:
+    - Create a mock "MultiStepAgent" that sleeps between steps to simulate work.
+    - Implement the streaming endpoint.
+3.  **Frontend Prototype**:
+    - Build a `StepProgress` component.
+    - Connect it to the streaming endpoint.
+4.  **Integration**:
+    - specific LangGraph callbacks to emission of these events.
+
+## 4. Example Payload
+
+**Draft Plan Event:**
+```json
+{
+  "type": "plan",
+  "steps": [
+    {"id": "step1", "description": "Search for weather"},
+    {"id": "step2", "description": "Calculate travel time"},
+    {"id": "step3", "description": "Draft email"}
+  ]
+}
+```
+
+**Status Update Event:**
+```json
+{
+  "type": "status",
+  "step_id": "step1",
+  "state": "completed",
+  "result_summary": "Weather is sunny"
+}
+```
