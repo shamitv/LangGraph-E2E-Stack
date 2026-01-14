@@ -57,6 +57,8 @@
 └────────────────────┘         └────────────────────────┘
 ```
 
+Detailed documentation on the [Agents is available here](agents.md).
+
 ## Data Flow
 
 User types message → ChatInterface → API Service → 

@@ -8,9 +8,17 @@ This doc explains how to run the backend (FastAPI) and frontend (Vite/React) tog
   .\venv\Scripts\Activate.ps1
   ```
 - Node.js 18+ (to run the Vite/React frontend). Use `nvm`, `fnm`, or your package manager of choice.
-- Environment variables (optional if you rely on defaults):
-  - `OPENAI_API_KEY`: Add to `backend/.env` if you want the LangGraph agent to call OpenAI; leave empty for the demo fallback.
   - `VITE_API_URL`: The frontend already defaults to `http://localhost:8000/api/v1`, but you can override it in `frontend/.env` if you need a different host/port.
+
+## 1.1 Understanding Environment Files
+The project uses multiple `.env` files to support various deployment and development scenarios:
+
+- **`backend/.env`**: Used by the FastAPI server when running locally. The backend code expects this file in its own directory to load API keys and database strings.
+- **`frontend/.env`**: Used by Vite during the build or dev process. Variables must be prefixed with `VITE_` to be accessible in the React code.
+- **Root `.env`**: Used by **Docker Compose** and automation scripts (like `start.sh`) to coordinate settings across all services from a single location.
+
+> [!NOTE]
+> During local development (without Docker), ensure you have the `OPENAI_API_KEY` in `backend/.env` as the backend process specifically looks there.
 
 ## 2. Backend setup & run
 1. From the repo root, install/update Python dependencies:
