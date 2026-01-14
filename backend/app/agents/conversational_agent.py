@@ -23,7 +23,7 @@ class ConversationalAgent(BaseAgent):
             model="gpt-3.5-turbo",
             temperature=0.7,
             openai_api_key=settings.OPENAI_API_KEY
-        ) if settings.OPENAI_API_KEY else None
+        ) if settings.OPENAI_API_KEY and settings.OPENAI_API_KEY.strip() else None
         self.graph = self._build_graph()
     
     def _build_graph(self) -> StateGraph:

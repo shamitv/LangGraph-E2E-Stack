@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/langgraph_demo"
     
     # OpenAI API Key (for LangChain)
+    # Note: This is optional for demo purposes. Agent will provide fallback responses.
     OPENAI_API_KEY: str = ""
     
     class Config:
