@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     ]
     
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/langgraph_demo"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./langgraph_demo.db"
     
     # OpenAI API Key (for LangChain)
     # Note: This is optional for demo purposes. Agent will provide fallback responses.

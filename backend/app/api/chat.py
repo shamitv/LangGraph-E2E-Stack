@@ -1,7 +1,7 @@
 """Chat API endpoints."""
 import uuid
 from fastapi import APIRouter, HTTPException
-from langchain.schema import HumanMessage, AIMessage
+from langchain.messages import HumanMessage, AIMessage
 from app.schemas import ChatRequest, ChatResponse
 from app.agents import AgentFactory
 
