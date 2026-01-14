@@ -1,7 +1,7 @@
 """Base agent class for LangGraph agents."""
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List
-from langchain.schema import BaseMessage
+from langchain_core.messages import BaseMessage
 
 
 class BaseAgent(ABC):

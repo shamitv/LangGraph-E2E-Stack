@@ -2,7 +2,8 @@
 from typing import Dict, Any, List, TypedDict, Annotated, Sequence
 import operator
 from langchain_openai import ChatOpenAI
-from langchain.schema import BaseMessage, HumanMessage, AIMessage, SystemMessage
+from langchain_core.messages import BaseMessage
+from langchain.messages import HumanMessage, AIMessage, SystemMessage
 from langgraph.graph import StateGraph, END
 from app.agents.base_agent import BaseAgent
 from app.core.config import settings

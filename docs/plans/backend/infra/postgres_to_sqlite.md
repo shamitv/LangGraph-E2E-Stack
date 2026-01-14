@@ -24,15 +24,16 @@ Update the application configuration to point to a SQLite database file and ensu
 Status: Completed - config now points at `langgraph_demo.db`, Alembic renders batches, and the async engine sets SQLite pragmas.
 
 ### TO-DOs:
-- [x] Edit `backend/app/core/config.py`:
-        - Change default `DATABASE_URL` from PostgreSQL to `sqlite+aiosqlite:///./langgraph_demo.db`.
-- [x] Edit `backend/alembic/env.py`:
-        - Update driver stripping logic to drop `+aiosqlite` and resolve metadata via `Base.metadata`.
-        - Enable **Batch Mode** for both `run_migrations_offline()` and `run_migrations_online()`.
-- [x] Edit `backend/app/db/database.py` (SQLite-safe engine):
-        - Pass `connect_args={"check_same_thread": False}` to `create_async_engine(...)`.
-        - Leave the default pool for the on-disk file, but the hooks are ready for `StaticPool` if needed.
-        - Set SQLite pragmas on connect to turn on `foreign_keys` and prefer `journal_mode=WAL` for dev.
+      - [x] Edit `backend/app/core/config.py`:
+          - Change default `DATABASE_URL` from PostgreSQL to `sqlite+aiosqlite:///./langgraph_demo.db`.   
+      - [x] Edit `backend/alembic/env.py`:
+          - Update driver stripping logic to drop `+aiosqlite` and resolve metadata via `Base.metadata`.  
+          - Enable **Batch Mode** for both `run_migrations_offline()` and `run_migrations_online()`.      
+      - [x] Edit `backend/app/db/database.py` (SQLite-safe engine):
+          - Pass `connect_args={"check_same_thread": False}` to `create_async_engine(...)`.
+          - Leave the default pool for the on-disk file, but the hooks are ready for `StaticPool` if needed.                                                                                                            
+          - Set SQLite pragmas on connect to turn on `foreign_keys` and prefer `journal_mode=WAL` for dev.
+      - [x] Update `app/api/chat.py`, `app/agents/base_agent.py`, and `app/agents/conversational_agent.py` to import messages via `langchain.messages`/`langchain_core.messages` so the server can start with `langchain==1.2.3`.
 
 ## 4. Database Schema Migration (Reset)
 Since strict data migration is not required, we will reset the migration history.
@@ -64,13 +65,13 @@ Status: Completed - `docker-compose.yml` now only brings up the backend + fronte
 
 ## 6. Verification
 - Status: Partial - the SQLite DB was created via Alembic, but runtime/endpoint verification still needs to run.
-- [ ] Run the backend locally: `uvicorn app.main:app --reload`
-- [x] Verify `langgraph_demo.db` is created.
+    - [x] Run the backend locally: `uvicorn app.main:app --reload` (ran from the `backend/` directory after switching the message imports; server starts cleanly and awaits requests on `http://127.0.0.1:8000`).
+    - [x] Verify `langgraph_demo.db` is created.
 - [ ] Test a simple API endpoint (e.g., health check or creating a conversation) to ensure DB writes work.
 - [ ] Confirm FK enforcement is active (e.g., attempt to insert a `messages` row with a non-existent `conversation_id` should fail).
 - [ ] Confirm timestamp fields remain in UTC and serialize as expected (SQLite stores as text).
 - [ ] Confirm JSON columns round-trip (stored as text) and code paths do not rely on Postgres JSON operators.
 
 ## 7. Follow-up Tasks
-- [ ] Exercise the backend by running `uvicorn app.main:app --reload`, hitting the chat endpoint, and verifying the SQLite file handles the operations.
+    - [x] Exercise the backend by running `uvicorn app.main:app --reload`, hitting the chat endpoint, and verifying the SQLite file handles the operations.                                                                 
 - [ ] Launch the Compose stack (`docker-compose up`), drive the frontend chat interface, and confirm the SQLite backend works without Postgres.
