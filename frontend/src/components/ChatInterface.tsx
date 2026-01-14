@@ -1,0 +1,119 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Loader } from 'lucide-react';
+import ChatMessage from './ChatMessage';
+import { Message } from '../types';
+import { chatService } from '../services/api';
+import './ChatInterface.css';
+
+const ChatInterface: React.FC = () => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string>('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputValue.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: inputValue,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue('');
+    setIsLoading(true);
+
+    try {
+      const response = await chatService.sendMessage({
+        message: inputValue,
+        session_id: sessionId || undefined,
+        agent_type: 'default',
+      });
+
+      // Update session ID if this is the first message
+      if (!sessionId) {
+        setSessionId(response.session_id);
+      }
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: response.message,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="chat-interface">
+      <div className="chat-header">
+        <h1>LangGraph Chat</h1>
+        <p>Powered by LangGraph Agents</p>
+      </div>
+
+      <div className="chat-messages">
+        {messages.length === 0 && (
+          <div className="welcome-message">
+            <h2>👋 Welcome!</h2>
+            <p>Start a conversation with our AI agent. Try asking a question or sharing something!</p>
+          </div>
+        )}
+        {messages.map((message) => (
+          <ChatMessage key={message.id} message={message} />
+        ))}
+        {isLoading && (
+          <div className="loading-indicator">
+            <Loader className="spinner" size={20} />
+            <span>Thinking...</span>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <form className="chat-input-form" onSubmit={handleSendMessage}>
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          placeholder="Type your message..."
+          className="chat-input"
+          disabled={isLoading}
+        />
+        <button
+          type="submit"
+          className="send-button"
+          disabled={!inputValue.trim() || isLoading}
+        >
+          <Send size={20} />
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default ChatInterface;
