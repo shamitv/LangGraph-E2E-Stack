@@ -7,7 +7,7 @@ The goal is to migrate the backend persistence layer from PostgreSQL to SQLite. 
 
 ## 2. Dependency Updates
 We need to swap the Postgres async driver for a SQLite async driver.
-Status: Completed — dependencies now include `aiosqlite` and the `tzdata` bundle that provides `UTC` when running on Windows.
+Status: Completed - dependencies now include `aiosqlite` and the `tzdata` bundle that provides `UTC` when running on Windows.
 
 ### TO-DOs:
 - [x] Edit `backend/requirements.txt`:
@@ -21,7 +21,7 @@ Status: Completed — dependencies now include `aiosqlite` and the `tzdata` bund
 
 ## 3. Configuration & Code Changes
 Update the application configuration to point to a SQLite database file and ensure Alembic handles SQLite's limitations (e.g., lack of strong `ALTER TABLE` support) using batch mode.
-Status: Completed — config now points at `langgraph_demo.db`, Alembic renders batches, and the async engine sets SQLite pragmas.
+Status: Completed - config now points at `langgraph_demo.db`, Alembic renders batches, and the async engine sets SQLite pragmas.
 
 ### TO-DOs:
 - [x] Edit `backend/app/core/config.py`:
@@ -36,7 +36,7 @@ Status: Completed — config now points at `langgraph_demo.db`, Alembic renders 
 
 ## 4. Database Schema Migration (Reset)
 Since strict data migration is not required, we will reset the migration history.
-Status: Completed — cleaned old migrations and generated/applied a fresh SQLite initial migration.
+Status: Completed - cleaned old migrations and generated/applied a fresh SQLite initial migration.
 
 ### TO-DOs:
 - [x] Delete all existing migration scripts in `backend/alembic/versions/` (delete the `.py` files).
@@ -52,7 +52,7 @@ Status: Completed — cleaned old migrations and generated/applied a fresh SQLit
 
 ## 5. Infrastructure (Docker)
 Remove the Postgres container and clean up the Compose file.
-Status: Completed — `docker-compose.yml` now only brings up the backend + frontend, relying on the SQLite URL in config.
+Status: Completed - `docker-compose.yml` now only brings up the backend + frontend, relying on the SQLite URL in config.
 
 ### TO-DOs:
 - [x] Edit `docker-compose.yml`:
@@ -63,7 +63,7 @@ Status: Completed — `docker-compose.yml` now only brings up the backend + fron
         - **Verify Persistence**: The `backend` service mounts `./backend:/app`, creating `langgraph_demo.db` under the mapped directory.
 
 ## 6. Verification
-- Status: Partial — the SQLite DB was created via Alembic, but runtime/endpoint verification still needs to run.
+- Status: Partial - the SQLite DB was created via Alembic, but runtime/endpoint verification still needs to run.
 - [ ] Run the backend locally: `uvicorn app.main:app --reload`
 - [x] Verify `langgraph_demo.db` is created.
 - [ ] Test a simple API endpoint (e.g., health check or creating a conversation) to ensure DB writes work.
