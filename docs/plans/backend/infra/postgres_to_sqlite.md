@@ -33,6 +33,12 @@ Update the application configuration to point to a SQLite database file and ensu
     - Enable **Batch Mode** for SQLite migrations:
       - In `run_migrations_offline()`: Add `render_as_batch=True` to `context.configure(...)`.
       - In `run_migrations_online()`: Add `render_as_batch=True` to `context.configure(...)`.
+- [ ] Edit `backend/app/db/database.py` (SQLite-safe engine):
+        - Add `connect_args={"check_same_thread": False}` to `create_async_engine(...)`.
+        - Consider `poolclass=StaticPool` if running in-memory; keep default pool for on-disk `langgraph_demo.db`.
+        - Set SQLite pragmas on connect:
+                - `PRAGMA foreign_keys=ON` (enforce FK constraints).
+                - Optional: `PRAGMA journal_mode=WAL` for fewer lock errors during dev.
 
 ## 4. Database Schema Migration (Reset)
 Since strict data migration is not required, we will reset the migration history.
@@ -65,3 +71,6 @@ Remove the Postgres container and clean up the Compose file.
 - [ ] Run the backend locally: `uvicorn app.main:app --reload`
 - [ ] Verify `langgraph_demo.db` is created.
 - [ ] Test a simple API endpoint (e.g., health check or creating a conversation) to ensure DB writes work.
+- [ ] Confirm FK enforcement is active (e.g., attempt to insert a `messages` row with a non-existent `conversation_id` should fail).
+- [ ] Confirm timestamp fields remain in UTC and serialize as expected (SQLite stores as text).
+- [ ] Confirm JSON columns round-trip (stored as text) and code paths do not rely on Postgres JSON operators.
