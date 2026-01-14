@@ -44,7 +44,8 @@
 2. **Configure environment**
    ```bash
    cp .env.example .env
-   # Edit .env with your settings
+   # Edit .env with your settings (e.g., OPENAI_API_KEY)
+   # Note: This file MUST be inside the backend/ folder for local runs.
    ```
 
 3. **Setup database**
