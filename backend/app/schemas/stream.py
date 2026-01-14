@@ -1,7 +1,9 @@
 from typing import List, Optional, Literal, Union
 from pydantic import BaseModel, Field
 
-class StreamEventType(BaseModel):
+from enum import Enum
+
+class StreamEventType(str, Enum):
     """Types of events that can be streamed."""
     PLAN = "plan"
     STATUS = "status"
