@@ -57,28 +57,31 @@ const ChatInterface: React.FC = () => {
         agent_type: 'conversational',
       },
       (event) => {
+        if (event.type === 'plan') {
+          currentSteps = event.steps;
+        } else if (event.type === 'status') {
+          currentSteps = currentSteps.map(step =>
+            step.id === event.step_id
+              ? { ...step, status: event.status, details: event.details }
+              : step
+          );
+        } else if (event.type === 'message') {
+          if (event.is_final) {
+            if (event.content) {
+              currentContent = event.content;
+            }
+          } else {
+            currentContent += event.content;
+          }
+        }
+
         // Update message based on event type
         setMessages((prev) => prev.map(msg => {
           if (msg.id !== assistantMsgId) return msg;
 
-          if (event.type === 'plan') {
-            currentSteps = event.steps;
-            return { ...msg, steps: currentSteps };
-          } else if (event.type === 'status') {
-            currentSteps = currentSteps.map(step =>
-              step.id === event.step_id
-                ? { ...step, status: event.status, details: event.details }
-                : step
-            );
+          if (event.type === 'plan' || event.type === 'status') {
             return { ...msg, steps: currentSteps };
           } else if (event.type === 'message') {
-            if (event.is_final) {
-              if (event.content) {
-                currentContent = event.content;
-              }
-            } else {
-              currentContent += event.content;
-            }
             return { ...msg, content: currentContent };
           } else if (event.type === 'error') {
             return { ...msg, content: `Error: ${event.error}` };
