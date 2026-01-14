@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-01-14
+
+### Security
+- Updated `aiohttp` from 3.9.1 to 3.13.3 to fix:
+  - HTTP Parser zip bomb vulnerability (CVE affecting versions <= 3.13.2)
+  - Denial of Service in malformed POST requests (CVE affecting versions < 3.9.4)
+  - Directory traversal vulnerability (CVE affecting versions >= 1.0.5, < 3.9.2)
+- Updated `fastapi` from 0.109.0 to 0.109.1 to fix:
+  - Content-Type Header ReDoS vulnerability
+- Updated `python-multipart` from 0.0.6 to 0.0.18 to fix:
+  - DoS via malformed multipart/form-data boundary (CVE affecting versions < 0.0.18)
+  - Content-Type Header ReDoS vulnerability (CVE affecting versions <= 0.0.6)
+
 ## [1.0.0] - 2026-01-14
 
 ### Added
