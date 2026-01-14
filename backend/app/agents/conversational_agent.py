@@ -21,9 +21,10 @@ class ConversationalAgent(BaseAgent):
         """Initialize the conversational agent."""
         super().__init__("conversational")
         self.llm = ChatOpenAI(
-            model="gpt-3.5-turbo",
+            model=settings.OPENAI_MODEL_NAME,
             temperature=0.7,
-            openai_api_key=settings.OPENAI_API_KEY
+            openai_api_key=settings.OPENAI_API_KEY,
+            base_url=settings.OPENAI_API_BASE
         ) if settings.OPENAI_API_KEY and settings.OPENAI_API_KEY.strip() else None
         self.graph = self._build_graph()
     
@@ -96,7 +97,7 @@ class ConversationalAgent(BaseAgent):
             "content": last_message.content,
             "metadata": {
                 "agent": self.name,
-                "model": "gpt-3.5-turbo" if self.llm else "demo"
+                "model": settings.OPENAI_MODEL_NAME if self.llm else "demo"
             }
         }
     
@@ -108,5 +109,5 @@ class ConversationalAgent(BaseAgent):
         """
         return {
             "name": self.name,
-            "description": "A simple conversational agent powered by LangGraph and GPT-3.5"
+            "description": f"A simple conversational agent powered by LangGraph and {settings.OPENAI_MODEL_NAME}"
         }
