@@ -1,5 +1,6 @@
 import React from 'react';
 import { Message } from '../types';
+import StepProgress from './StepProgress';
 import './ChatMessage.css';
 
 interface ChatMessageProps {
@@ -15,7 +16,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
-      <div className="message-content">{message.content}</div>
+      <div className="message-content">
+        {message.content}
+        {message.steps && <StepProgress steps={message.steps} />}
+      </div>
     </div>
   );
 };

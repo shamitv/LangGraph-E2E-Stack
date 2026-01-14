@@ -72,3 +72,18 @@ We will transition from a synchronous REST API (`POST /chat`) to a **streaming a
   "result_summary": "Weather is sunny"
 }
 ```
+
+## 5. Implementation Status (2026-01-14)
+
+### Completed
+- [x] **Backend**: Defined `PlanEvent`, `StatusEvent`, `MessageEvent` schemas in `backend/app/schemas/stream.py`.
+- [x] **Backend**: Implemented `MultiStepAgent` mock for testing.
+- [x] **Backend**: Added `POST /api/v1/chat/stream` SSE endpoint in `backend/app/api/chat.py`.
+- [x] **Frontend**: Created `streamService` with `fetch` and `TextDecoder` in `frontend/src/services/stream.ts`.
+- [x] **Frontend**: Implemented `StepProgress` UI component.
+- [x] **Frontend**: Integrated streaming into `ChatInterface`.
+
+### Pending / Next Steps
+1.  **LangGraph Integration**: Refactor real agents (e.g., `ConversationalAgent`) to use LangGraph's streaming callbacks to emit `status` events for real tool usage.
+2.  **History Persistence**: Ensure the streaming endpoint correctly loads and saves conversation history to the database (currently mocked/TODO in `chat.py`).
+3.  **Error Recovery**: Handle stream interruptions and reconnection logic in the frontend service.

@@ -2,6 +2,7 @@
 from typing import Dict
 from app.agents.base_agent import BaseAgent
 from app.agents.conversational_agent import ConversationalAgent
+from app.agents.multistep_agent import MultiStepAgent
 
 
 class AgentFactory:
@@ -23,6 +24,7 @@ class AgentFactory:
         agent_map = {
             "default": "conversational",
             "conversational": "conversational",
+            "multistep": "multistep",
         }
         
         agent_key = agent_map.get(agent_type, "conversational")
@@ -31,6 +33,8 @@ class AgentFactory:
         if agent_key not in cls._agents:
             if agent_key == "conversational":
                 cls._agents[agent_key] = ConversationalAgent()
+            elif agent_key == "multistep":
+                cls._agents[agent_key] = MultiStepAgent()
         
         return cls._agents[agent_key]
     
