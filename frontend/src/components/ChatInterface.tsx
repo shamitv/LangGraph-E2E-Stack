@@ -54,7 +54,7 @@ const ChatInterface: React.FC = () => {
       {
         message: inputValue,
         session_id: sessionId || undefined,
-        agent_type: 'multistep', // Default to multistep to test streaming
+        agent_type: 'conversational',
       },
       (event) => {
         // Update message based on event type
@@ -72,8 +72,13 @@ const ChatInterface: React.FC = () => {
             );
             return { ...msg, steps: currentSteps };
           } else if (event.type === 'message') {
-            currentContent = event.is_final ? event.content : (currentContent + event.content);
-            // For this simple mock, we replace content if it's final or append if partial (mock sends final)
+            if (event.is_final) {
+              if (event.content) {
+                currentContent = event.content;
+              }
+            } else {
+              currentContent += event.content;
+            }
             return { ...msg, content: currentContent };
           } else if (event.type === 'error') {
             return { ...msg, content: `Error: ${event.error}` };

@@ -7,6 +7,10 @@ from langchain.messages import HumanMessage, AIMessage, SystemMessage
 from langgraph.graph import StateGraph, END
 from app.agents.base_agent import BaseAgent
 from app.core.config import settings
+from app.schemas.stream import PlanEvent, StatusEvent, MessageEvent, StepInfo
+from typing import AsyncGenerator
+import json
+
 
 
 class AgentState(TypedDict):
@@ -101,6 +105,50 @@ class ConversationalAgent(BaseAgent):
             }
         }
     
+    
+    async def astream_events(self, message: str, history: List[BaseMessage]) -> AsyncGenerator[Any, None]:
+        """Stream events for the conversational agent."""
+        
+        # 1. Emit Initial Plan
+        # For a simple conversation, the plan is just "Process Request"
+        steps = [StepInfo(id="process", description="Process Request", status="running")]
+        yield PlanEvent(steps=steps)
+        yield StatusEvent(step_id="process", status="running")
+        
+        # 2. Prepare Messages
+        messages = []
+        if not history:
+            messages.append(SystemMessage(content="You are a helpful AI assistant. Be concise and friendly."))
+        messages.extend(history)
+        messages.append(HumanMessage(content=message))
+        
+        # 3. Stream from LLM
+        if self.llm:
+            accumulated_content = ""
+            try:
+                # Use astream instead of ainvoke to get chunks
+                # We need to extract the underlying string chunk
+                async for chunk in self.llm.astream(messages):
+                     content = chunk.content
+                     if content:
+                         accumulated_content += content
+                         yield MessageEvent(content=content, is_final=False)
+                
+                # 4. Finalize
+                yield StatusEvent(step_id="process", status="completed", details="Response generated")
+                # Send one last event to confirm completion/save state if needed
+                yield MessageEvent(content="", is_final=True)
+                
+            except Exception as e:
+                yield StatusEvent(step_id="process", status="failed", details=str(e))
+                yield MessageEvent(content=f"Error: {str(e)}", is_final=True)
+                
+        else:
+            # Demo mode fallback
+            demo_text = "I am a demo agent. Please configure your OpenAI API key."
+            yield MessageEvent(content=demo_text, is_final=True)
+            yield StatusEvent(step_id="process", status="completed")
+
     def get_agent_info(self) -> Dict[str, str]:
         """Get information about the agent.
         
