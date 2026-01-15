@@ -117,8 +117,8 @@ const ChatInterface: React.FC = () => {
   return (
     <div className="chat-interface">
       <div className="chat-header">
-        <h1>LangGraph Chat</h1>
-        <p>Powered by LangGraph Agents</p>
+        <h1>AgentOrchestra Stack</h1>
+        <p>Agent UI + Data Access</p>
       </div>
 
       <div className="chat-messages">
