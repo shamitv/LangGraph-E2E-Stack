@@ -230,3 +230,6 @@ dist-ssr/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Generated UI assets for python package
+backend/agent_demo_framework/ui/
