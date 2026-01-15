@@ -47,6 +47,24 @@ LangGraph-E2E-Demo/
   - Node.js 20+
   - PostgreSQL 15+
 
+## 🧩 Development Install
+
+Set up the project for local development:
+
+1. Create a virtual environment and install backend deps:
+   - `cd backend`
+   - `python -m venv venv`
+   - `venv\Scripts\activate` (Windows) or `source venv/bin/activate` (macOS/Linux)
+   - `pip install -r requirements.txt`
+
+2. Install frontend deps:
+   - `cd ../frontend`
+   - `npm install`
+
+3. Run the backend and frontend:
+   - Backend: `uvicorn agent_demo_framework.main:app --reload --host 0.0.0.0 --port 8000`
+   - Frontend: `npm run dev`
+
 ## 📦 Install from PyPI
 
 Install the backend package:
