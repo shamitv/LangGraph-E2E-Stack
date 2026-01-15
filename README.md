@@ -1,6 +1,6 @@
-# LangGraph E2E Demo
+# AgentOrchestra Stack
 
-A full-stack demonstration of LangGraph agents with a React chatbot UI and FastAPI backend. This project showcases how to build an end-to-end AI agent system with modern web technologies.
+A full-stack agent platform with a React chatbot UI and FastAPI backend. This project showcases how to build an end-to-end AI agent system with modern web technologies.
 
 ## 🏗️ Architecture
 
@@ -46,6 +46,20 @@ LangGraph-E2E-Demo/
   - Python 3.11+
   - Node.js 20+
   - PostgreSQL 15+
+
+## 📦 Install from PyPI
+
+Install the backend package:
+
+```bash
+pip install agentorchestra-stack
+```
+
+Run the CLI (after configuring your environment variables):
+
+```bash
+healthcare-agent --message "I am patient PT-1001. I have been having bad back pain and need an MRI."
+```
 
 ### Option 1: Using Docker (Recommended)
 
