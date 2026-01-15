@@ -140,6 +140,38 @@ class HealthcareAgent(BaseAgent):
                         calls.append(call.dict())
         return calls
 
+    def _pending_tool_calls(self, messages: List[BaseMessage]) -> list[str]:
+        last_ai_with_calls: AIMessage | None = None
+        for msg in reversed(messages):
+            if isinstance(msg, AIMessage) and getattr(msg, "tool_calls", None):
+                last_ai_with_calls = msg
+                break
+        if not last_ai_with_calls:
+            return []
+
+        pending_ids: list[str] = []
+        for call in getattr(last_ai_with_calls, "tool_calls", []) or []:
+            if isinstance(call, dict):
+                call_id = call.get("id") or call.get("tool_call_id")
+            else:
+                call_id = getattr(call, "id", None) or getattr(call, "tool_call_id", None)
+            if call_id:
+                pending_ids.append(str(call_id))
+
+        if not pending_ids:
+            return []
+
+        responded_ids: set[str] = set()
+        for msg in messages:
+            if isinstance(msg, ToolMessage) or getattr(msg, "type", None) == "tool":
+                tool_call_id = getattr(msg, "tool_call_id", None)
+                if not tool_call_id and hasattr(msg, "additional_kwargs"):
+                    tool_call_id = msg.additional_kwargs.get("tool_call_id")
+                if tool_call_id:
+                    responded_ids.add(str(tool_call_id))
+
+        return [call_id for call_id in pending_ids if call_id not in responded_ids]
+
     def _has_patient_result(self, messages: List[BaseMessage]) -> bool:
         for name, content in self._collect_tool_results(messages):
             if name != "patient_record":
@@ -200,8 +232,8 @@ class HealthcareAgent(BaseAgent):
     async def _should_continue(self, state: AgentState):
         messages = state["messages"]
         # If any tool calls are pending, continue to tools node for execution.
-        tool_calls = self._collect_tool_calls(messages)
-        if tool_calls:
+        pending_calls = self._pending_tool_calls(messages)
+        if pending_calls:
             return "continue"
         return "end"
 
@@ -209,7 +241,7 @@ class HealthcareAgent(BaseAgent):
         msgs = state["messages"]
         # Count tool outputs to prevent infinite loops (robust to ToolMessage vs tool_calls attr)
         tool_call_count = len(self._collect_tool_results(msgs))
-        pending_tool_calls = len(self._collect_tool_calls(msgs))
+        pending_tool_calls = len(self._pending_tool_calls(msgs))
         
         # Check for key data points based on tool outputs
         has_patient = self._has_patient_result(msgs)
@@ -222,6 +254,12 @@ class HealthcareAgent(BaseAgent):
         if pending_tool_calls:
             print("Decision: triage_nurse (pending tool calls)")
             return {"next": "triage_nurse"}
+
+        # If the last message is an assistant response without tool calls, stop looping
+        last_msg = msgs[-1] if msgs else None
+        if isinstance(last_msg, AIMessage) and not getattr(last_msg, "tool_calls", None):
+            print("Decision: care_coordinator (triage asked for input)")
+            return {"next": "care_coordinator"}
 
         # If we have the basics or have tried too many times, go to coordinator
         if (has_patient and has_policy) or tool_call_count >= 6:
