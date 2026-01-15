@@ -22,7 +22,7 @@ from ..tools.healthcare.policy import policy_check
 class AgentState(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]
     next: str  # supervisor routing token
-    task_type: Literal["general", "coordination"]  # Track conversation mode
+    task_type: str  # Track conversation mode (general vs coordination)
 
 class HealthcareAgent(BaseAgent):
     """
@@ -128,7 +128,7 @@ class HealthcareAgent(BaseAgent):
             "needs_coverage": any(k in lower for k in ["coverage", "copay", "insurance", "plan"]),
             "needs_slots": any(k in lower for k in ["appointment", "schedule", "slot", "availability", "visit", "booking"]),
             "needs_meds": any(k in lower for k in ["medication", "meds", "drug", "refill", "prescription", "albuterol", "amoxicillin", "oxycodone", "ibuprofen", "cetirizine"]),
-            "is_general_query": any(k in lower for k in ["summary", "allergies", "list", "show", "what is", "who is", "give me"]),
+            "is_general_query": any(k in lower for k in ["summary", "allergies", "list", "show", "what is", "who is", "give me", "know about"]),
         }
 
     def _collect_tool_results(self, messages: List[BaseMessage]) -> list[tuple[str | None, str]]:
@@ -278,28 +278,12 @@ class HealthcareAgent(BaseAgent):
         # If there are pending tool calls, always return to triage/tools
         if pending_tool_calls:
             print(f"Decision: {state.get('next') or 'triage_nurse'} (pending tool calls)")
+            # Preserve task_type if known
             return {"next": state.get("next") or "triage_nurse"}
         
         # If General Query - Route to Data Agent
         if task_type == "general":
-            # If we have a result (tool call count > 0) and last was AI message, we might be done
-            last_msg = msgs[-1] if msgs else None
-            if isinstance(last_msg, AIMessage) and not getattr(last_msg, "tool_calls", None):
-                 # Data agent finished
-                 # If we want to loop back to supervisor to confirm, we do.
-                 # But if supervisor sees a final answer from data agent, we can just Stop?
-                 # Actually, supervisor should just END if data agent is done?
-                 # simplified: if data agent just spoke, likely done.
-                 pass
-            
-            # If we haven't started data agent yet
-            if not any(isinstance(m, AIMessage) and "Data Clerk" in str(m.content) for m in msgs): # weak check
-                 pass 
-
-            # Better: if next was data_agent, and now we are back, check if done.
-            # For now, just route to data_agent if it's the first turn or if tools just finished
-            
-            # Simple logic: If mode is general, use data_agent
+            # ... (omitted comments for brevity)
             print("Decision: data_agent")
             return {"next": "data_agent", "task_type": "general"}
 
@@ -307,20 +291,20 @@ class HealthcareAgent(BaseAgent):
         last_msg = msgs[-1] if msgs else None
         if isinstance(last_msg, AIMessage) and not getattr(last_msg, "tool_calls", None):
             print("Decision: care_coordinator (triage asked for input)")
-            return {"next": "care_coordinator"}
+            return {"next": "care_coordinator", "task_type": "coordination"}
 
         # If we have the basics or have tried too many times, go to coordinator
         if (has_patient and has_policy) or tool_call_count >= 6:
             print("Decision: care_coordinator")
-            return {"next": "care_coordinator"}
+            return {"next": "care_coordinator", "task_type": "coordination"}
 
         # If triage didn't trigger any tool calls, avoid looping forever
         if tool_call_count == 0 and len(msgs) >= 2:
             print("Decision: care_coordinator (no tool calls)")
-            return {"next": "care_coordinator"}
+            return {"next": "care_coordinator", "task_type": "coordination"}
         
         print("Decision: triage_nurse")
-        return {"next": "triage_nurse"}
+        return {"next": "triage_nurse", "task_type": "coordination"}
 
     async def _data_agent_node(self, state: AgentState):
         print("--- DATA AGENT NODE ---")
