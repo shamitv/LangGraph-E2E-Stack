@@ -47,13 +47,13 @@ Successfully initialized a complete full-stack LangGraph E2E Demo repository wit
 - Alembic for migrations
 
 **Key Files**:
-- `app/main.py` - Application entry point
-- `app/api/chat.py` - Chat endpoints
-- `app/core/config.py` - Configuration
-- `app/schemas/schemas.py` - Data schemas
+- `agent_demo_framework/main.py` - Application entry point
+- `agent_demo_framework/api/chat.py` - Chat endpoints
+- `agent_demo_framework/core/config.py` - Configuration
+- `agent_demo_framework/schemas/schemas.py` - Data schemas
 
 ### 3. LangGraph Agents ✅
-**Location**: `backend/app/agents/`
+**Location**: `backend/agent_demo_framework/agents/`
 
 **Features**:
 - BaseAgent abstract class for extensibility
@@ -74,7 +74,7 @@ Successfully initialized a complete full-stack LangGraph E2E Demo repository wit
 - `agents/agent_factory.py` - Agent factory
 
 ### 4. Database Schema ✅
-**Location**: `backend/app/models/`, `backend/alembic/`
+**Location**: `backend/agent_demo_framework/models/`, `backend/alembic/`
 
 **Tables**:
 1. `conversations` - Chat sessions
@@ -90,8 +90,8 @@ Successfully initialized a complete full-stack LangGraph E2E Demo repository wit
 - Alembic migrations
 
 **Key Files**:
-- `app/models/models.py` - Database models
-- `app/db/database.py` - Connection management
+- `agent_demo_framework/models/models.py` - Database models
+- `agent_demo_framework/db/database.py` - Connection management
 - `alembic/versions/001_initial_schema.py` - Initial migration
 
 ## Additional Deliverables
@@ -160,8 +160,8 @@ Successfully initialized a complete full-stack LangGraph E2E Demo repository wit
 ## Extension Points
 
 Users can extend the system by:
-1. Adding new agents in `backend/app/agents/`
-2. Creating new API endpoints in `backend/app/api/`
+1. Adding new agents in `backend/agent_demo_framework/agents/`
+2. Creating new API endpoints in `backend/agent_demo_framework/api/`
 3. Customizing the UI in `frontend/src/components/`
 4. Adding database tables via Alembic migrations
 

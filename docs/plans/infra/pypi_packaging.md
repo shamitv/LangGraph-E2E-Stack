@@ -3,8 +3,8 @@
 ## 1. Goal
 Package the `healthcare_agent` backend code into a distributable Python library (`sdist` and `wheel`) that can be published to PyPI.
 Critically, the package must:
-1.  **Include** all necessary code (`backend/app`).
-2.  **Include** required data files (`data/mock_db`, `data/policies`) so the agent works out-of-the-box.
+1.  **Include** all necessary code (`backend/agent_demo_framework`).
+2.  **Include** required data files (`backend/agent_demo_framework/data/mock_db`, `backend/agent_demo_framework/data/policies`) so the agent works out-of-the-box.
 3.  **Exclude** development artifacts (`node_modules`, `venv`, `tests`, `docs`).
 4.  **Install** cleanly via `pip install langgraph-healthcare-agent`.
 
@@ -13,11 +13,11 @@ Current structure relies on a repo-root `data/` folder. This is not portable. We
 
 ### 2.1 Move Data
 *   **Source**: `d:\work\LangGraph-E2E-Demo\data`
-*   **Destination**: `d:\work\LangGraph-E2E-Demo\backend\app\data`
-*   **Action**: Move `mock_db` and `policies` directories into `backend/app/data`.
+*   **Destination**: `d:\work\LangGraph-E2E-Demo\backend\agent_demo_framework\data`
+*   **Action**: Move `mock_db` and `policies` directories into `backend/agent_demo_framework/data`.
 
 ### 2.2 Update Configuration
-Refactor `backend/app/core/config.py` to resolve `DATA_DIR` relative to the package installation:
+Refactor `backend/agent_demo_framework/core/config.py` to resolve `DATA_DIR` relative to the package installation:
 
 ```python
 # OLD
@@ -36,8 +36,8 @@ Track and update all code paths that reference repo-level `data/`:
 *   Validate the CLI still resolves data in an installed environment.
 
 ### 2.4 Choose Proper Package Path
-Decide whether to keep `backend/app` as the package root or adopt a `src/` layout.
-*   **Option A (keep)**: package root is `backend/app`.
+Decide whether to keep `backend/agent_demo_framework` as the package root or adopt a `src/` layout.
+*   **Option A (keep)**: package root is `backend/agent_demo_framework`.
 *   **Option B (src)**: move code to `backend/src/app` to avoid accidental imports from repo root.
 Document the choice and update packaging config accordingly.
 
@@ -85,11 +85,13 @@ dependencies = [
     "pydantic>=2.12.0",
     "pydantic-settings>=2.12.0",
     "sqlalchemy>=2.0.0",
+    "alembic>=1.18.0",
     "aiosqlite>=0.19.0",
     "python-dotenv>=1.0.0",
     "httpx>=0.28.0",
     "aiohttp>=3.9.0",
     "python-multipart>=0.0.9",
+    "tzdata>=2024.1",
 ]
 
 [project.urls]
@@ -98,8 +100,7 @@ Repository = "https://github.com/<org>/<repo>"
 Issues = "https://github.com/<org>/<repo>/issues"
 
 [project.scripts]
-# NOTE: cmdline/ is currently at backend/cmdline/, outside app/.
-# Must move to backend/agent_demo_framework/cmdline/ for this entry point to work.
+# NOTE: cmdline/ is now inside backend/agent_demo_framework/.
 healthcare-agent = "agent_demo_framework.cmdline.healthcare_agent_cli:main"
 
 [tool.setuptools]
@@ -113,7 +114,7 @@ include = ["agent_demo_framework", "agent_demo_framework.*"]
 ### 3.2 `backend/MANIFEST.in`
 Explicitly control non-code file inclusion.
 
-> **Note**: `app/ui/dist` and `app/ui/src` are created by the build step in §3.4.
+> **Note**: `agent_demo_framework/ui/dist` and `agent_demo_framework/ui/src` are created by the build step in §3.4.
 
 ```text
 include agent_demo_framework/data/mock_db/*.json
@@ -137,7 +138,7 @@ Ensure data files are included in **both** sdist and wheel:
 ### 3.4 UI Bundling (src + wheel)
 Bundle the built UI artifacts into the Python package so they appear in both sdist and wheel:
 *   Build the frontend (e.g., `frontend/dist/`).
-*   Copy or emit build output into a package path, e.g., `backend/app/ui/`.
+*   Copy or emit build output into a package path, e.g., `backend/agent_demo_framework/ui/`.
 *   Ensure `MANIFEST.in` includes `app/ui/**`.
 *   Ensure wheel includes UI files via `include-package-data = true` or `package-data` entries.
 *   Add a build step (script or Make target) that builds UI **before** `python -m build`.
@@ -255,13 +256,13 @@ jobs:
 
 ## 7. Execution Steps (Checklist)
 1. [ ] **Backup**: Ensure repo is committed.
-2. [ ] **Refactor Data**: Move `data/` to `backend/agent_demo_framework/data/`.
-3. [ ] **Move CLI**: Move `backend/cmdline/` to `backend/agent_demo_framework/cmdline/`.
-4. [ ] **Update Config**: Modify `config.py` path logic.
-5. [ ] **Update Imports/Docs**: Fix any repo-level `data/` references.
-6. [ ] **Create Configs**: Write `pyproject.toml` and `MANIFEST.in`.
+2. [x] **Refactor Data**: Move `data/` to `backend/agent_demo_framework/data/`.
+3. [x] **Move CLI**: Move `backend/cmdline/` to `backend/agent_demo_framework/cmdline/`.
+4. [x] **Update Config**: Modify `config.py` path logic.
+5. [x] **Update Imports/Docs**: Fix any repo-level `data/` references.
+6. [x] **Create Configs**: Write `pyproject.toml` and `MANIFEST.in`.
 7. [ ] **Validate Deps**: Reconcile `requirements.txt` with `dependencies`.
-8. [ ] **Build UI & Copy**: Build UI and copy `dist/` + `src/` into `backend/app/ui/`.
+8. [ ] **Build UI & Copy**: Build UI and copy `dist/` + `src/` into `backend/agent_demo_framework/ui/`.
 9. [ ] **Build**: Run `python -m build` from `backend/`.
 10. [ ] **Verify**: Inspect archive contents (no `node_modules`, `venv`, etc.).
 11. [ ] **Test Install**: `pip install dist/*.whl` in a fresh venv and run CLI.

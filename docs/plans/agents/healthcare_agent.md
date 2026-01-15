@@ -8,7 +8,7 @@ We will implement a `HealthcareAgent` inspired by the `healthcare_care_coordinat
 It will integrate with our existing:
 -   **API**: `POST /api/v1/chat/stream` (SSE).
 -   **UI**: Generic Chat Interface (supporting streaming events).
--   **Infrastructure**: `BaseAgent` class, `AgentFactory`, and `data/` directory.
+-   **Infrastructure**: `BaseAgent` class, `AgentFactory`, and `backend/agent_demo_framework/data` directory.
 
 > [!IMPORTANT]
 > **Scope Disclaimer**: This is a **basic Proof of Concept (POC)** implementation.
@@ -20,7 +20,7 @@ It will integrate with our existing:
 
 ## 2. Architecture
 
-### 2.1 Agent Structure (`backend/app/agents/healthcare_agent.py`)
+### 2.1 Agent Structure (`backend/agent_demo_framework/agents/healthcare_agent.py`)
 -   **Class**: `HealthcareAgent(BaseAgent)`
 -   **Graph**: `StateGraph` with:
     -   `supervisor`: Routes to `triage_nurse`, `care_coordinator`, or `end`.
@@ -29,7 +29,7 @@ It will integrate with our existing:
     -   `tools`: `ToolNode` executing the actual tool logic.
 
 ### 2.2 Data Management
--   **Project Data**: Defaults to `d:\work\LangGraph-E2E-Demo\data`.
+-   **Project Data**: Defaults to `d:\work\LangGraph-E2E-Demo\backend\agent_demo_framework\data`.
     -   **Configurable**: Can be overridden via `DATA_DIR` environment variable (in `.env` or system env).
 -   **Policies**: `{DATA_DIR}/policies/` will store the markdown policy files used by the `policy_check` tool.
 -   **Mock Databases**: Move hardcoded dictionaries (patients, slots, meds) into JSON files in `{DATA_DIR}/mock_db/` for cleaner separation.
@@ -47,14 +47,14 @@ It will integrate with our existing:
 
 | Tool | Source Implementation | Target Implementation |
 | :--- | :--- | :--- |
-| `patient_record` | Hardcoded dict | `backend/app/tools/healthcare/patient.py` |
-| `appointment_slots` | Hardcoded dict | `backend/app/tools/healthcare/scheduling.py` |
-| `medication_info` | Hardcoded dict | `backend/app/tools/healthcare/meds.py` |
-| `coverage_check` | Hardcoded logic | `backend/app/tools/healthcare/coverage.py` |
-| `policy_check` | **Complex 2-phase LLM** | `backend/app/tools/healthcare/policy.py` |
+| `patient_record` | Hardcoded dict | `backend/agent_demo_framework/tools/healthcare/patient.py` |
+| `appointment_slots` | Hardcoded dict | `backend/agent_demo_framework/tools/healthcare/scheduling.py` |
+| `medication_info` | Hardcoded dict | `backend/agent_demo_framework/tools/healthcare/meds.py` |
+| `coverage_check` | Hardcoded logic | `backend/agent_demo_framework/tools/healthcare/coverage.py` |
+| `policy_check` | **Complex 2-phase LLM** | `backend/agent_demo_framework/tools/healthcare/policy.py` |
 
 **Policy Check Tool Details**:
--   Reads `README.md` from `data/policies/`.
+-   Reads `README.md` from `backend/agent_demo_framework/data/policies/`.
 -   Uses LLM to select relevant policies.
 -   Reads specific MD files.
 -   Evaluates compliance.
@@ -62,16 +62,16 @@ It will integrate with our existing:
 ## 4. Integration TO-DOs
 
 ### Phase 1: Setup & Data
-- [x] Update `backend/app/core/config.py` to add `DATA_DIR` setting (defaulting to project root `data/`).
-- [x] Create `backend/app/agents/healthcare_agent.py`.
-- [x] Create `backend/app/tools/healthcare/` package.
+- [x] Update `backend/agent_demo_framework/core/config.py` to add `DATA_DIR` setting (defaulting to package `data/`).
+- [x] Create `backend/agent_demo_framework/agents/healthcare_agent.py`.
+- [x] Create `backend/agent_demo_framework/tools/healthcare/` package.
 - [x] Create `{DATA_DIR}/policies/` and populate with `README.md` + policy files (from example repo).
-- [x] Register `HealthcareAgent` in `AgentFactory` (`backend/app/agents/agent_factory.py`).
+- [x] Register `HealthcareAgent` in `AgentFactory` (`backend/agent_demo_framework/agents/agent_factory.py`).
 
 ### Phase 2: Tool Implementation
 - [x] Implement `patient_record`, `appointment_slots`, `medication_info`, `coverage_check`.
 - [x] Implement `policy_check` logic:
-    -   Dependency: `data/policies` path configuration.
+    -   Dependency: `backend/agent_demo_framework/data/policies` path configuration.
     -   Dependency: Secondary `LLM` instance for policy analysis (re-use main LLM config).
 
 ### Phase 3: Graph & Supervisor
@@ -129,7 +129,7 @@ These queries exercise the agent's full workflow, ensuring that patient data ret
 
 ## 7. Mock Data Coverage for Queries 1–12
 
-The following mock patient records are available in [data/mock_db/patients.json](data/mock_db/patients.json) to support the first 12 queries:
+The following mock patient records are available in [backend/agent_demo_framework/data/mock_db/patients.json](../../../backend/agent_demo_framework/data/mock_db/patients.json) to support the first 12 queries:
 
 - **John Doe (MRN 12345)** → `PT-12345`
 - **Emily Chen (MRN 67890)** → `PT-67890`
@@ -146,6 +146,6 @@ Each record includes:
 - `labs` entries to support query 12 (“most recent lab results”).
 
 **Notes on scenario coverage**:
-- Coverage queries (e.g., aspirin, copay, plan checks) are supported via the mock coverage matrix in [backend/app/tools/healthcare/coverage.py](backend/app/tools/healthcare/coverage.py).
-- Policy validation queries (e.g., imaging, controlled substances) are supported by policy files in `data/policies/` and the `policy_check` tool.
-- Scheduling queries depend on `appointment_slots` in [backend/app/tools/healthcare/scheduling.py](backend/app/tools/healthcare/scheduling.py). Mock cardiology slots are limited; when none are found, the agent will request location or date-range adjustments.
+- Coverage queries (e.g., aspirin, copay, plan checks) are supported via the mock coverage matrix in [backend/agent_demo_framework/tools/healthcare/coverage.py](../../../backend/agent_demo_framework/tools/healthcare/coverage.py).
+- Policy validation queries (e.g., imaging, controlled substances) are supported by policy files in `backend/agent_demo_framework/data/policies/` and the `policy_check` tool.
+- Scheduling queries depend on `appointment_slots` in [backend/agent_demo_framework/tools/healthcare/scheduling.py](../../../backend/agent_demo_framework/tools/healthcare/scheduling.py). Mock cardiology slots are limited; when none are found, the agent will request location or date-range adjustments.

@@ -24,7 +24,7 @@ LangGraph-E2E-Demo/
 │   └── vite.config.ts
 │
 ├── backend/                 # FastAPI Backend
-│   ├── app/
+│   ├── agent_demo_framework/
 │   │   ├── agents/         # LangGraph agent implementations
 │   │   ├── api/            # FastAPI routes
 │   │   ├── core/           # Core configuration
@@ -110,7 +110,7 @@ LangGraph-E2E-Demo/
 
 7. **Start the backend server**
    ```bash
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   uvicorn agent_demo_framework.main:app --reload --host 0.0.0.0 --port 8000
    ```
 
 #### Frontend Setup
@@ -175,7 +175,7 @@ The project includes a conversational agent powered by LangGraph:
 
 - **ConversationalAgent** - A general-purpose chatbot using GPT-3.5-turbo
 
-You can extend this by creating new agents in `backend/app/agents/` that inherit from `BaseAgent`.
+You can extend this by creating new agents in `backend/agent_demo_framework/agents/` that inherit from `BaseAgent`.
 
 ## 🗄️ Database Schema
 

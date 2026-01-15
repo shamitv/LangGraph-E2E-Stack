@@ -29,7 +29,7 @@ The project uses multiple `.env` files to support various deployment and develop
 3. Start the backend from its directory so the package import paths resolve correctly:
    ```powershell
    cd backend
-   ..\venv\Scripts\uvicorn.exe app.main:app --reload
+   ..\venv\Scripts\uvicorn.exe agent_demo_framework.main:app --reload
    ```
    - The server watches `backend/`, listens on `http://127.0.0.1:8000`, and automatically reloads when you change Python files.
    - The SQLite engine already sets `PRAGMA foreign_keys=ON` and `journal_mode=WAL`, so FK constraints are enforced.
@@ -63,14 +63,14 @@ The project uses multiple `.env` files to support various deployment and develop
 - After the app is running, `langgraph_demo.db` appears inside `backend/`—delete or reset it if you need to recreate the schema.
 
 ## 6. Optional: Docker-compose sanity run
-`docker-compose.yml` now only builds the backend and frontend services and relies on the SQLite URL that is baked into `backend/app/core/config.py`. If you prefer Docker, run:
+`docker-compose.yml` now only builds the backend and frontend services and relies on the SQLite URL that is baked into `backend/agent_demo_framework/core/config.py`. If you prefer Docker, run:
 ```powershell
 docker-compose up --build
 ```
 The frontend (`http://localhost:3000`) proxies to the backend (`http://localhost:8000`), and the SQLite file lives inside the backend container at `/app/langgraph_demo.db` (mirrored to your host via the `./backend:/app` volume).
 
 ## 7. Quick troubleshooting
-- `ModuleNotFoundError: No module named 'app'`: start Uvicorn from `backend/` so the `app` package is on `sys.path`.
+- `ModuleNotFoundError: No module named 'agent_demo_framework'`: start Uvicorn from `backend/` so the package is on `sys.path`.
 - LangChain import errors are resolved via `langchain.messages`/`langchain_core.messages`; do not revert those edits.
 - SQLite fails with `database is locked`? The engine already uses WAL mode, but restart the backend and delete `langgraph_demo.db` if a previous run hung.
 
