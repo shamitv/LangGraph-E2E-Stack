@@ -9,7 +9,7 @@ const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string>('');
+  const [sessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -54,7 +54,7 @@ const ChatInterface: React.FC = () => {
       {
         message: inputValue,
         session_id: sessionId || undefined,
-        agent_type: 'conversational',
+        agent_type: 'healthcare',
       },
       (event) => {
         if (event.type === 'plan') {
