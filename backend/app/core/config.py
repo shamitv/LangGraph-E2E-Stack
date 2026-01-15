@@ -24,8 +24,11 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./langgraph_demo.db"
     
-    # Data Directory
-    DATA_DIR: str = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
+    # Data Directory (repo-level `data/`)
+    DATA_DIR: str = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
+        "data",
+    )
     
     # OpenAI Configuration
     OPENAI_API_KEY: str = ""
