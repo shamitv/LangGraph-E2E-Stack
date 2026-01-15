@@ -35,43 +35,6 @@ It will integrate with our existing:
 -   **Mock Databases**: Move hardcoded dictionaries (patients, slots, meds) into JSON files in `{DATA_DIR}/mock_db/` for cleaner separation.
 
 ### 2.3 Streaming Integration
-# Plan: Healthcare Care Coordinator Agent Integration
-
-## 1. Overview
-We will implement a `HealthcareAgent` inspired by the `healthcare_care_coordinator.py` example. This agent uses a supervisor-worker pattern to:
-1.  **Triage**: Gather patient info, check coverage, and verify policies (`triage_nurse`).
-2.  **Coordinate**: Synthesize a care plan (`care_coordinator`).
-
-It will integrate with our existing:
--   **API**: `POST /api/v1/chat/stream` (SSE).
--   **UI**: Generic Chat Interface (supporting streaming events).
--   **Infrastructure**: `BaseAgent` class, `AgentFactory`, and `data/` directory.
-
-> [!IMPORTANT]
-> **Scope Disclaimer**: This is a **basic Proof of Concept (POC)** implementation.
-> -   It uses **mock data** (no real EMR integration).
-> -   The `policy_check` is simplified for demonstration.
-> -   It is **NOT** intended for real medical use or decision making.
-> -   Authentication and detailed error handling are minimal.
-> -   **Context Management**: Maintains simple raw message history; does not use advanced memory or summarization.
-
-## 2. Architecture
-
-### 2.1 Agent Structure (`backend/app/agents/healthcare_agent.py`)
--   **Class**: `HealthcareAgent(BaseAgent)`
--   **Graph**: `StateGraph` with:
-    -   `supervisor`: Routes to `triage_nurse`, `care_coordinator`, or `end`.
-    -   `triage_nurse`: Calls tools (patient_record, policy_check, etc.).
-    -   `care_coordinator`: Synthesizes final response.
-    -   `tools`: `ToolNode` executing the actual tool logic.
-
-### 2.2 Data Management
--   **Project Data**: Defaults to `d:\work\LangGraph-E2E-Demo\data`.
-    -   **Configurable**: Can be overridden via `DATA_DIR` environment variable (in `.env` or system env).
--   **Policies**: `{DATA_DIR}/policies/` will store the markdown policy files used by the `policy_check` tool.
--   **Mock Databases**: Move hardcoded dictionaries (patients, slots, meds) into JSON files in `{DATA_DIR}/mock_db/` for cleaner separation.
-
-### 2.3 Streaming Integration
 -   Implement `astream_events`:
     -   Emit `PlanEvent`: "Planning care coordination..."
     -   Emit `StatusEvent`:
@@ -99,37 +62,37 @@ It will integrate with our existing:
 ## 4. Integration TO-DOs
 
 ### Phase 1: Setup & Data
--   - [x] Update `backend/app/core/config.py` to add `DATA_DIR` setting (defaulting to project root `data/`).
--   - [x] Create `backend/app/agents/healthcare_agent.py`.
--   - [x] Create `backend/app/tools/healthcare/` package.
--   - [x] Create `{DATA_DIR}/policies/` and populate with `README.md` + policy files (from example repo).
--   - [x] Register `HealthcareAgent` in `AgentFactory` (`backend/app/agents/agent_factory.py`).
+- [x] Update `backend/app/core/config.py` to add `DATA_DIR` setting (defaulting to project root `data/`).
+- [x] Create `backend/app/agents/healthcare_agent.py`.
+- [x] Create `backend/app/tools/healthcare/` package.
+- [x] Create `{DATA_DIR}/policies/` and populate with `README.md` + policy files (from example repo).
+- [x] Register `HealthcareAgent` in `AgentFactory` (`backend/app/agents/agent_factory.py`).
 
 ### Phase 2: Tool Implementation
--   - [x] Implement `patient_record`, `appointment_slots`, `medication_info`, `coverage_check`.
--   - [x] Implement `policy_check` logic:
+- [x] Implement `patient_record`, `appointment_slots`, `medication_info`, `coverage_check`.
+- [x] Implement `policy_check` logic:
     -   Dependency: `data/policies` path configuration.
     -   Dependency: Secondary `LLM` instance for policy analysis (re-use main LLM config).
 
 ### Phase 3: Graph & Supervisor
--   - [x] Implement `HealthcareAgent._build_graph`.
--   - [x] Implement `supervisor` node logic.
--   - [x] Implement `triage_nurse` node logic (bind tools).
--   - [x] Implement `care_coordinator` node logic (final output).
+- [x] Implement `HealthcareAgent._build_graph`.
+- [x] Implement `supervisor` node logic.
+- [x] Implement `triage_nurse` node logic (bind tools).
+- [x] Implement `care_coordinator` node logic (final output).
 
 ### Phase 4: Streaming
--   - [x] Implement `astream_events` in `HealthcareAgent`.
--   - [x] Ensure specific node activities (e.g., "Calling policy_check") emit visible `StatusEvent`s.
+- [x] Implement `astream_events` in `HealthcareAgent`.
+- [x] Ensure specific node activities (e.g., "Calling policy_check") emit visible `StatusEvent`s.
 
 ### Phase 5: Testing
--   - [x] Write a command-line script to run the agent in isolation (single prompt + streaming output) for quick validation.
+- [x] Write a command-line script to run the agent in isolation (single prompt + streaming output) for quick validation.
 
 ### Phase 6: De-hardcode Agent Logic
--   - [x] Remove hardcoded patient references (`Jordan Lee`, `PT-1001`) from supervisor, triage, and care coordinator prompts.
--   - [x] Make triage tool calls conditional on user intent (e.g., only call `policy_check` for imaging requests).
--   - [x] Make plan step labels dynamic based on selected tools/actions.
--   - [x] Avoid fixed node-name filtering in streaming; derive target node(s) from config or graph metadata.
--   - [x] Make recursion limit configurable (settings/env). Keep hardcoded `100` as default.
+- [x] Remove hardcoded patient references (`Jordan Lee`, `PT-1001`) from supervisor, triage, and care coordinator prompts.
+- [x] Make triage tool calls conditional on user intent (e.g., only call `policy_check` for imaging requests).
+- [x] Make plan step labels dynamic based on selected tools/actions.
+- [x] Avoid fixed node-name filtering in streaming; derive target node(s) from config or graph metadata.
+- [x] Make recursion limit configurable (settings/env). Keep hardcoded `100` as default.
 
 ## 5. UI Implications
 -   No specific UI changes needed if generic streaming is robust.
@@ -163,3 +126,26 @@ The following **20 queries** can be used to test the Healthcare Agent across its
 |20| "Generate a discharge summary for **Michael Patel**, including medication changes and follow-up appointments." |
 
 These queries exercise the agent's full workflow, ensuring that patient data retrieval, policy checks, scheduling, and care-plan synthesis all function as expected.
+
+## 7. Mock Data Coverage for Queries 1–12
+
+The following mock patient records are available in [data/mock_db/patients.json](data/mock_db/patients.json) to support the first 12 queries:
+
+- **John Doe (MRN 12345)** → `PT-12345`
+- **Emily Chen (MRN 67890)** → `PT-67890`
+- **Michael Patel** → `PT-3003`
+- **Sarah Lee** → `PT-4455`
+- **David Kim** → `PT-5566`
+- **Patient #1122** → `PT-1122` (Avery Brooks)
+- **Patient #4455** → `PT-4455` (Sarah Lee)
+- **Maria Gonzalez** → `PT-7788`
+- **Patient #9988** → `PT-9988` (Noah Williams)
+
+Each record includes:
+- Demographics, conditions, allergies, current meds, and insurance plan.
+- `labs` entries to support query 12 (“most recent lab results”).
+
+**Notes on scenario coverage**:
+- Coverage queries (e.g., aspirin, copay, plan checks) are supported via the mock coverage matrix in [backend/app/tools/healthcare/coverage.py](backend/app/tools/healthcare/coverage.py).
+- Policy validation queries (e.g., imaging, controlled substances) are supported by policy files in `data/policies/` and the `policy_check` tool.
+- Scheduling queries depend on `appointment_slots` in [backend/app/tools/healthcare/scheduling.py](backend/app/tools/healthcare/scheduling.py). Mock cardiology slots are limited; when none are found, the agent will request location or date-range adjustments.
