@@ -24,10 +24,33 @@ Refactor `backend/app/core/config.py` to resolve `DATA_DIR` relative to the pack
 DATA_DIR = os.path.join(..., "data")
 
 # NEW
-import app
-PACKAGE_ROOT = os.path.dirname(os.path.abspath(app.__file__))
+import agent_demo_framework
+PACKAGE_ROOT = os.path.dirname(os.path.abspath(agent_demo_framework.__file__))
 DATA_DIR = os.path.join(PACKAGE_ROOT, "data")
 ```
+
+### 2.3 Data Move Impact
+Track and update all code paths that reference repo-level `data/`:
+*   Update tools that load mock DB / policy files.
+*   Update any tests, scripts, or docs that reference repo-level paths.
+*   Validate the CLI still resolves data in an installed environment.
+
+### 2.4 Choose Proper Package Path
+Decide whether to keep `backend/app` as the package root or adopt a `src/` layout.
+*   **Option A (keep)**: package root is `backend/app`.
+*   **Option B (src)**: move code to `backend/src/app` to avoid accidental imports from repo root.
+Document the choice and update packaging config accordingly.
+
+### 2.5 Choose Proper Name
+Confirm the distribution name and import name:
+*   **Distribution name**: `langgraph-healthcare-agent` (pip install name).
+*   **Import package**: `agent_demo_framework`.
+
+Assume a full rename from `app` → `agent_demo_framework` across the codebase:
+*   Update all imports.
+*   Update entry points.
+*   Update config paths.
+*   Update any internal references to the package root.
 
 ## 3. Packaging Configuration
 We will use modern `pyproject.toml` (PEP 621) located in `backend/`.
@@ -54,31 +77,112 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "langgraph>=0.0.10",
-    "langchain-openai>=0.0.5",
-    "pydantic>=2.0",
+    "fastapi>=0.128.0",
+    "uvicorn[standard]>=0.40.0",
+    "langgraph>=0.2.0",
+    "langchain>=0.3.0",
+    "langchain-openai>=0.2.1",
+    "pydantic>=2.12.0",
+    "pydantic-settings>=2.12.0",
+    "sqlalchemy>=2.0.0",
+    "aiosqlite>=0.19.0",
     "python-dotenv>=1.0.0",
-    "pydantic-settings>=2.0.0"
+    "httpx>=0.28.0",
+    "aiohttp>=3.9.0",
+    "python-multipart>=0.0.9",
 ]
 
+[project.urls]
+Homepage = "https://github.com/<org>/<repo>"
+Repository = "https://github.com/<org>/<repo>"
+Issues = "https://github.com/<org>/<repo>/issues"
+
 [project.scripts]
-healthcare-agent = "app.cmdline.healthcare_agent_cli:main"
+# NOTE: cmdline/ is currently at backend/cmdline/, outside app/.
+# Must move to backend/agent_demo_framework/cmdline/ for this entry point to work.
+healthcare-agent = "agent_demo_framework.cmdline.healthcare_agent_cli:main"
 
 [tool.setuptools]
-packages = ["app"]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agent_demo_framework", "agent_demo_framework.*"]
 ```
 
 ### 3.2 `backend/MANIFEST.in`
 Explicitly control non-code file inclusion.
+
+> **Note**: `app/ui/dist` and `app/ui/src` are created by the build step in §3.4.
+
 ```text
-include app/data/mock_db/*.json
-include app/data/policies/*.md
-include app/data/policies/README.md
+include agent_demo_framework/data/mock_db/*.json
+include agent_demo_framework/data/policies/*.md
+include agent_demo_framework/data/policies/README.md
+recursive-include agent_demo_framework/ui/dist *
+recursive-include agent_demo_framework/ui/src *
 global-exclude __pycache__
 global-exclude *.py[cod]
 global-exclude .env
 global-exclude venv
 global-exclude node_modules
+```
+
+### 3.3 Data Inclusion
+Ensure data files are included in **both** sdist and wheel:
+*   `MANIFEST.in` covers sdist.
+*   `include-package-data = true` (and/or `tool.setuptools.package-data`) covers wheels.
+*   Verify that `agent_demo_framework/data/**` is present in the built wheel.
+
+### 3.4 UI Bundling (src + wheel)
+Bundle the built UI artifacts into the Python package so they appear in both sdist and wheel:
+*   Build the frontend (e.g., `frontend/dist/`).
+*   Copy or emit build output into a package path, e.g., `backend/app/ui/`.
+*   Ensure `MANIFEST.in` includes `app/ui/**`.
+*   Ensure wheel includes UI files via `include-package-data = true` or `package-data` entries.
+*   Add a build step (script or Make target) that builds UI **before** `python -m build`.
+
+#### Concrete Build Step (build + copy source)
+Create a repo-root script (or Make target) that:
+1. Installs frontend deps (if needed).
+2. Builds the UI.
+3. Copies **built assets** and **UI source** into the package.
+
+Example (PowerShell):
+```powershell
+# From repo root
+Push-Location frontend
+npm install
+npm run build
+Pop-Location
+
+# Ensure package UI folders exist
+New-Item -ItemType Directory -Force backend\agent_demo_framework\ui\dist | Out-Null
+New-Item -ItemType Directory -Force backend\agent_demo_framework\ui\src | Out-Null
+
+# Copy built UI assets
+Copy-Item -Recurse -Force frontend\dist\* backend\agent_demo_framework\ui\dist\
+
+# Copy UI source (for debugging / reference)
+Copy-Item -Recurse -Force frontend\src\* backend\agent_demo_framework\ui\src\
+```
+
+Example (bash):
+```bash
+cd frontend
+npm install
+npm run build
+cd ..
+
+mkdir -p backend/agent_demo_framework/ui/dist backend/agent_demo_framework/ui/src
+cp -R frontend/dist/* backend/agent_demo_framework/ui/dist/
+cp -R frontend/src/* backend/agent_demo_framework/ui/src/
+```
+
+### 3.5 Dependencies
+Validate runtime dependencies against `backend/requirements.txt` and actual imports:
+*   Add missing runtime packages to `dependencies`.
+*   Keep dev-only packages (linters, test frameworks) out of `dependencies`.
 ```
 
 ## 4. Build Process
@@ -112,10 +216,52 @@ Upload to PyPI (or TestPyPI):
 python -m twine upload dist/*
 ```
 
-## 6. Execution Steps (Checklist)
+## 6. Additional Considerations
+
+### 6.1 Database Migrations
+The `backend/alembic/` directory contains database migrations. Decide:
+*   **Exclude** (recommended): Users run migrations separately; don't package.
+*   **Include**: Add `alembic/` to package and document migration commands.
+
+### 6.2 Versioning Strategy
+Consider dynamic versioning via git tags:
+```toml
+[tool.setuptools.dynamic]
+version = {attr = "agent_demo_framework.__version__"}
+```
+Or use `setuptools-scm` for automatic version from git tags.
+
+### 6.3 CI/CD Publishing (Optional)
+Add GitHub Actions workflow for automated PyPI publishing on release tags:
+```yaml
+# .github/workflows/publish.yml
+on:
+  release:
+    types: [published]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+      - run: pip install build twine
+      - run: python -m build
+        working-directory: backend
+      - run: twine upload backend/dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+```
+
+## 7. Execution Steps (Checklist)
 1. [ ] **Backup**: Ensure repo is committed.
-2. [ ] **Refactor Data**: Move `data/` to `backend/app/data/`.
-3. [ ] **Update Config**: Modify `config.py` path logic.
-4. [ ] **Create Configs**: Write `pyproject.toml` and `MANIFEST.in`.
-5. [ ] **Build**: Run builder.
-6. [ ] **Verify**: Inspect archive contents.
+2. [ ] **Refactor Data**: Move `data/` to `backend/agent_demo_framework/data/`.
+3. [ ] **Move CLI**: Move `backend/cmdline/` to `backend/agent_demo_framework/cmdline/`.
+4. [ ] **Update Config**: Modify `config.py` path logic.
+5. [ ] **Update Imports/Docs**: Fix any repo-level `data/` references.
+6. [ ] **Create Configs**: Write `pyproject.toml` and `MANIFEST.in`.
+7. [ ] **Validate Deps**: Reconcile `requirements.txt` with `dependencies`.
+8. [ ] **Build UI & Copy**: Build UI and copy `dist/` + `src/` into `backend/app/ui/`.
+9. [ ] **Build**: Run `python -m build` from `backend/`.
+10. [ ] **Verify**: Inspect archive contents (no `node_modules`, `venv`, etc.).
+11. [ ] **Test Install**: `pip install dist/*.whl` in a fresh venv and run CLI.
