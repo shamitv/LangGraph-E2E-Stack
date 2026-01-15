@@ -2,7 +2,7 @@ from typing import List, AsyncGenerator, Any, TypedDict, Annotated, Literal
 import json
 import re
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage
+from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage, ToolMessage
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
@@ -81,6 +81,94 @@ class HealthcareAgent(BaseAgent):
         
         return builder.compile()
 
+    def _extract_patient_id(self, text: str) -> str | None:
+        match = re.search(r"\bPT-\d+\b", text, re.IGNORECASE)
+        return match.group(0).upper() if match else None
+
+    def _latest_user_text(self, messages: List[BaseMessage]) -> str:
+        for msg in reversed(messages):
+            if isinstance(msg, HumanMessage) and msg.content:
+                return str(msg.content)
+        return ""
+
+    def _infer_intents(self, text: str) -> dict:
+        lower = text.lower()
+        return {
+            "needs_patient": bool(re.search(r"\bpt-\d+\b", lower)) or "patient" in lower,
+            "needs_policy": any(k in lower for k in ["policy", "mri", "ct", "scan", "imaging", "x-ray", "pet"]),
+            "needs_coverage": any(k in lower for k in ["coverage", "copay", "insurance", "plan"]),
+            "needs_slots": any(k in lower for k in ["appointment", "schedule", "slot", "availability", "visit", "booking"]),
+            "needs_meds": any(k in lower for k in ["medication", "meds", "drug", "refill", "prescription", "albuterol", "amoxicillin", "oxycodone", "ibuprofen", "cetirizine"]),
+        }
+
+    def _collect_tool_results(self, messages: List[BaseMessage]) -> list[tuple[str | None, str]]:
+        results: list[tuple[str | None, str]] = []
+        for msg in messages:
+            if isinstance(msg, ToolMessage) or getattr(msg, "type", None) == "tool":
+                name = getattr(msg, "name", None) or getattr(msg, "tool", None)
+                if not name and hasattr(msg, "additional_kwargs"):
+                    name = msg.additional_kwargs.get("name") or msg.additional_kwargs.get("tool")
+                content = getattr(msg, "content", "") or ""
+                results.append((name, content))
+        return results
+
+    def _has_patient_result(self, messages: List[BaseMessage]) -> bool:
+        for name, content in self._collect_tool_results(messages):
+            if name != "patient_record":
+                continue
+            try:
+                payload = json.loads(content)
+                if isinstance(payload, dict) and (payload.get("patient_id") or payload.get("name")):
+                    return True
+            except Exception:
+                if "not found" not in content.lower() and "error" not in content.lower():
+                    return True
+        return False
+
+    def _has_policy_result(self, messages: List[BaseMessage]) -> bool:
+        for name, content in self._collect_tool_results(messages):
+            if name != "policy_check":
+                continue
+            try:
+                payload = json.loads(content)
+                if isinstance(payload, dict) and payload.get("status"):
+                    return True
+            except Exception:
+                if "requires_review" in content.lower() or "blocked" in content.lower() or "pass" in content.lower():
+                    return True
+        return False
+
+    def _build_plan_steps(self, user_text: str) -> list[dict]:
+        intents = self._infer_intents(user_text)
+        actions: list[str] = []
+        if intents["needs_patient"]:
+            actions.append("patient information")
+        if intents["needs_policy"]:
+            actions.append("policy requirements")
+        if intents["needs_coverage"]:
+            actions.append("coverage details")
+        if intents["needs_slots"]:
+            actions.append("appointment availability")
+        if intents["needs_meds"]:
+            actions.append("medication info")
+
+        if actions:
+            triage_desc = f"Triage: gather {', '.join(actions)}"
+        else:
+            triage_desc = "Triage: assess request and gather required details"
+
+        return [
+            {"id": "triage", "description": triage_desc, "status": "pending"},
+            {"id": "coordination", "description": "Synthesize care coordination plan", "status": "pending"},
+        ]
+
+    def _should_stream_node(self, node: str | None) -> bool:
+        if not node:
+            return False
+        if settings.HEALTHCARE_STREAM_NODES:
+            return node in settings.HEALTHCARE_STREAM_NODES
+        return True
+
     async def _should_continue(self, state: AgentState):
         messages = state["messages"]
         last_message = messages[-1]
@@ -90,18 +178,12 @@ class HealthcareAgent(BaseAgent):
 
     async def _supervisor_node(self, state: AgentState):
         msgs = state["messages"]
-        # Convert all content to lower case for robust checking
-        all_text = ""
-        for m in msgs:
-            if hasattr(m, "content") and m.content:
-                all_text += " " + str(m.content).lower()
-        
         # Count tool calls to prevent infinite loops
         tool_call_count = len([m for m in msgs if hasattr(m, "tool_calls") and m.tool_calls])
         
-        # Check for key data points
-        has_patient = "jordan lee" in all_text or "pt-1001" in all_text
-        has_policy = "policy" in all_text or "requires_review" in all_text.lower()
+        # Check for key data points based on tool outputs
+        has_patient = self._has_patient_result(msgs)
+        has_policy = self._has_policy_result(msgs)
         
         print(f"\n--- SUPERVISOR NODE ({len(msgs)} msgs, {tool_call_count} tool calls) ---")
         print(f"Status: patient={has_patient}, policy={has_policy}")
@@ -110,18 +192,30 @@ class HealthcareAgent(BaseAgent):
         if (has_patient and has_policy) or tool_call_count >= 6:
             print("Decision: care_coordinator")
             return {"next": "care_coordinator"}
+
+        # If triage didn't trigger any tool calls, avoid looping forever
+        if tool_call_count == 0 and len(msgs) >= 2:
+            print("Decision: care_coordinator (no tool calls)")
+            return {"next": "care_coordinator"}
         
         print("Decision: triage_nurse")
         return {"next": "triage_nurse"}
 
     async def _triage_nurse_node(self, state: AgentState):
         print("--- TRIAGE NURSE NODE ---")
+        user_text = self._latest_user_text(state["messages"])
+        patient_id = self._extract_patient_id(user_text)
         sys = SystemMessage(content=(
-            "You are a triage nurse. Use tools to gather facts for Jordan Lee (PT-1001).\n"
-            "1. CALL patient_record(patient_id='PT-1001') if record is missing.\n"
-            "2. CALL policy_check(request='MRI') for MRI policy.\n"
-            "3. CALL appointment_slots for availability.\n"
-            "DO NOT just talk. Use tools. When tools provide results, stop and let the supervisor handle it."
+            "You are a triage nurse. Use tools to gather facts relevant to the user's request.\n"
+            f"User request: {user_text or '(no user text provided)'}\n"
+            f"Detected patient_id: {patient_id or '(none)'}\n"
+            "Guidance:\n"
+            "- If a patient_id is available, call patient_record(patient_id=...).\n"
+            "- If the request mentions imaging (MRI/CT/scan), call policy_check(request_type='imaging', details='<request>').\n"
+            "- If the request mentions medication, call medication_info(drug=...).\n"
+            "- If coverage/cost is asked and you have plan/service, call coverage_check(insurance_plan=..., service=...).\n"
+            "- If scheduling is requested and you have clinic/specialty/date_range, call appointment_slots(...).\n"
+            "If required details are missing, ask a brief clarification question."
         ))
         ai_msg = await self.llm.bind_tools(self.tools).ainvoke([sys] + state["messages"])
         return {"messages": [ai_msg]}
@@ -129,24 +223,21 @@ class HealthcareAgent(BaseAgent):
     async def _care_coordinator_node(self, state: AgentState):
         print("--- CARE COORDINATOR NODE ---")
         sys = SystemMessage(content=(
-            "You are a care coordinator. Review the gathered facts (patient Jordan Lee, MRI policy, slots).\n"
+            "You are a care coordinator. Review the gathered facts from tool outputs.\n"
             "Write a clear 3-paragraph plan: Summary, Appointment Details, and Coverage/Instructions.\n"
-            "Mention Jordan Lee by name and the MRI pre-authorization requirement specifically."
+            "Reference the patient by name if available, and cite any policy requirements that apply."
         ))
         response = await self.llm.ainvoke([sys] + state["messages"])
         return {"messages": [response]}
 
     async def process(self, message: str, history: List[BaseMessage]) -> dict:
         messages = history + [HumanMessage(content=message)]
-        result = await self.graph.ainvoke({"messages": messages}, config={"recursion_limit": 100})
+        result = await self.graph.ainvoke({"messages": messages}, config={"recursion_limit": settings.HEALTHCARE_RECURSION_LIMIT})
         return {"content": result["messages"][-1].content}
 
     async def astream_events(self, message: str, history: List[BaseMessage]) -> AsyncGenerator[Any, None]:
         # Initial Plan
-        yield PlanEvent(steps=[
-            {"id": "triage", "description": "Gathering patient information and checking policies", "status": "pending"},
-            {"id": "coordination", "description": "Synthesizing care coordination plan", "status": "pending"},
-        ])
+        yield PlanEvent(steps=self._build_plan_steps(message))
 
         messages = history + [HumanMessage(content=message)]
         
@@ -156,7 +247,7 @@ class HealthcareAgent(BaseAgent):
         # 1. Triage Phase
         yield StatusEvent(step_id="triage", status="running", details="Starting triage process...")
         
-        async for event in self.graph.astream_events(state, version="v1", config={"recursion_limit": 100}):
+        async for event in self.graph.astream_events(state, version="v1", config={"recursion_limit": settings.HEALTHCARE_RECURSION_LIMIT}):
             kind = event["event"]
             
             # Catch token streams
@@ -167,10 +258,7 @@ class HealthcareAgent(BaseAgent):
                 # DEBUG: Print metadata to trace node names in the graph
                 # print(f"DEBUG: Node: {node}, Meta: {metadata}")
                 
-                # Only stream tokens from the care_coordinator node
-                # Note: LangGraph often prefixes node names with the graph name or uses internal IDs
-                # We'll check for the substring to be safe
-                if node and ("care_coordinator" in node or node == "care_coordinator"):
+                if self._should_stream_node(node):
                     content = event["data"]["chunk"].content
                     if content:
                         yield MessageEvent(content=content, is_final=False)

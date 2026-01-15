@@ -85,7 +85,14 @@ It will integrate with our existing:
 - [x] Ensure specific node activities (e.g., "Calling policy_check") emit visible `StatusEvent`s.
 
 ### Phase 5: Testing
-- [ ] Write a command-line script to run the agent in isolation (single prompt + streaming output) for quick validation.
+- [x] Write a command-line script to run the agent in isolation (single prompt + streaming output) for quick validation.
+
+### Phase 6: De-hardcode Agent Logic
+- [x] Remove hardcoded patient references (`Jordan Lee`, `PT-1001`) from supervisor, triage, and care coordinator prompts.
+- [x] Make triage tool calls conditional on user intent (e.g., only call `policy_check` for imaging requests).
+- [x] Make plan step labels dynamic based on selected tools/actions.
+- [x] Avoid fixed node-name filtering in streaming; derive target node(s) from config or graph metadata.
+- [x] Make recursion limit configurable (settings/env). Keep hardcoded `100` as default.
 
 ## 5. UI Implications
 -   No specific UI changes needed if generic streaming is robust.

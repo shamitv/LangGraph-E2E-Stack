@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
 import os
@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     OPENAI_API_BASE: str = "https://api.openai.com/v1"
     OPENAI_MODEL_NAME: str = "gpt-5-nano"
+
+    # Healthcare Agent Configuration
+    HEALTHCARE_RECURSION_LIMIT: int = 100
+    HEALTHCARE_STREAM_NODES: Optional[List[str]] = None
     
     model_config = SettingsConfigDict(
         env_file=".env",
