@@ -11,20 +11,17 @@ It operates on a **Supervisor-Worker** pattern where a Supervisor node routes wo
 The agent is implemented as a `StateGraph` with the following nodes:
 
 1.  **Supervisor**: The entry point. It analyzes the conversation state and tool outputs to decide the next step:
-    *   Route to `triage_nurse` to gather information.
-    *   Route to `care_coordinator` if sufficient data is collected.
-    *   Route to `END` if the conversation is over (rare in this loop, usually ends via Coordinator).
+    *   **Data Agent** (`general` task): For simple queries (patient summaries, allergies, policy checks) without coordination needs.
+    *   **Triage Nurse** (`coordination` task): For complex requests requiring multiple steps, scheduling, or care planning.
+    *   **Care Coordinator**: Synthesizes the final plan after triage.
 
-2.  **Triage Nurse**: Focused on data gathering. It determines which tools to call based on the user's intent:
-    *   `patient_record`: Look up MRN, demographics, history.
-    *   `coverage_check`: Verify insurance benefits.
-    *   `policy_check`: Check clinical guidelines (e.g., for MRI/CT).
-    *   `medication_info`: Look up drug details.
-    *   `appointment_slots`: Check availability.
+2.  **Data Agent**: A "Data Clerk" focused on direct answers. It calls tools and returns the raw data or a concise summary directly to the user.
 
-3.  **Tools**: Executes the actual Python functions associated with the selected tools.
+3.  **Triage Nurse**: Focused on gathering detailed context for care planning. It determines which tools to call for complex workflows.
 
-4.  **Care Coordinator**: The synthesizer. It takes all the gathered structured data (from tool outputs) and drafts a human-friendly response, typically including a 3-paragraph Care Plan.
+4.  **Tools**: Executes the actual Python functions associated with the selected tools.
+
+5.  **Care Coordinator**: The synthesizer. It takes gathered structured data and drafts a formal 3-paragraph Care Plan.
 
 ### 2.2 Agent Graph Diagram
 
@@ -32,8 +29,12 @@ The agent is implemented as a `StateGraph` with the following nodes:
 graph TD
     START --> Supervisor
     
-    Supervisor -- "Needs Info" --> TriageNurse
+    Supervisor -- "General Query" --> DataAgent
+    Supervisor -- "Coordination Needed" --> TriageNurse
     Supervisor -- "Has Info / Max Steps" --> CareCoordinator
+    
+    DataAgent -- "Tools Called" --> Tools
+    DataAgent -- "Answer Ready" --> Supervisor
     
     TriageNurse -- "Tools Called" --> Tools
     TriageNurse -- "No Tools / Done" --> Supervisor

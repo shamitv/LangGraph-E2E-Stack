@@ -22,6 +22,7 @@ from ..tools.healthcare.policy import policy_check
 class AgentState(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]
     next: str  # supervisor routing token
+    task_type: Literal["general", "coordination"]  # Track conversation mode
 
 class HealthcareAgent(BaseAgent):
     """
@@ -48,6 +49,7 @@ class HealthcareAgent(BaseAgent):
         builder.add_node("supervisor", self._supervisor_node)
         builder.add_node("triage_nurse", self._triage_nurse_node)
         builder.add_node("care_coordinator", self._care_coordinator_node)
+        builder.add_node("data_agent", self._data_agent_node)
         builder.add_node("tools", self.tool_node)
         
         builder.set_entry_point("supervisor")
@@ -59,6 +61,7 @@ class HealthcareAgent(BaseAgent):
             {
                 "triage_nurse": "triage_nurse",
                 "care_coordinator": "care_coordinator",
+                "data_agent": "data_agent",
                 "end": END
             }
         )
@@ -66,6 +69,16 @@ class HealthcareAgent(BaseAgent):
         # After triage, if tool calls are present, go to tools
         builder.add_conditional_edges(
             "triage_nurse",
+            self._should_continue,
+            {
+                "continue": "tools",
+                "end": "supervisor"
+            }
+        )
+
+        # After data agent, tool calls go to tools, otherwise END/Supervisor
+        builder.add_conditional_edges(
+            "data_agent",
             self._should_continue,
             {
                 "continue": "tools",
@@ -115,6 +128,7 @@ class HealthcareAgent(BaseAgent):
             "needs_coverage": any(k in lower for k in ["coverage", "copay", "insurance", "plan"]),
             "needs_slots": any(k in lower for k in ["appointment", "schedule", "slot", "availability", "visit", "booking"]),
             "needs_meds": any(k in lower for k in ["medication", "meds", "drug", "refill", "prescription", "albuterol", "amoxicillin", "oxycodone", "ibuprofen", "cetirizine"]),
+            "is_general_query": any(k in lower for k in ["summary", "allergies", "list", "show", "what is", "who is", "give me"]),
         }
 
     def _collect_tool_results(self, messages: List[BaseMessage]) -> list[tuple[str | None, str]]:
@@ -243,6 +257,17 @@ class HealthcareAgent(BaseAgent):
         tool_call_count = len(self._collect_tool_results(msgs))
         pending_tool_calls = len(self._pending_tool_calls(msgs))
         
+        # Determine Task Type if not set
+        task_type = state.get("task_type")
+        if not task_type:
+            intents = self._infer_intents(self._latest_user_text(msgs))
+            # If it looks like a simple lookup/summary without scheduling/coordination
+            if intents["is_general_query"] and not (intents["needs_slots"] or intents["needs_policy"] and "pre-auth" in self._latest_user_text(msgs).lower()):
+                task_type = "general"
+            else:
+                task_type = "coordination"
+            print(f"Supervisor inferred intent: {task_type}")
+
         # Check for key data points based on tool outputs
         has_patient = self._has_patient_result(msgs)
         has_policy = self._has_policy_result(msgs)
@@ -252,8 +277,31 @@ class HealthcareAgent(BaseAgent):
         
         # If there are pending tool calls, always return to triage/tools
         if pending_tool_calls:
-            print("Decision: triage_nurse (pending tool calls)")
-            return {"next": "triage_nurse"}
+            print(f"Decision: {state.get('next') or 'triage_nurse'} (pending tool calls)")
+            return {"next": state.get("next") or "triage_nurse"}
+        
+        # If General Query - Route to Data Agent
+        if task_type == "general":
+            # If we have a result (tool call count > 0) and last was AI message, we might be done
+            last_msg = msgs[-1] if msgs else None
+            if isinstance(last_msg, AIMessage) and not getattr(last_msg, "tool_calls", None):
+                 # Data agent finished
+                 # If we want to loop back to supervisor to confirm, we do.
+                 # But if supervisor sees a final answer from data agent, we can just Stop?
+                 # Actually, supervisor should just END if data agent is done?
+                 # simplified: if data agent just spoke, likely done.
+                 pass
+            
+            # If we haven't started data agent yet
+            if not any(isinstance(m, AIMessage) and "Data Clerk" in str(m.content) for m in msgs): # weak check
+                 pass 
+
+            # Better: if next was data_agent, and now we are back, check if done.
+            # For now, just route to data_agent if it's the first turn or if tools just finished
+            
+            # Simple logic: If mode is general, use data_agent
+            print("Decision: data_agent")
+            return {"next": "data_agent", "task_type": "general"}
 
         # If the last message is an assistant response without tool calls, stop looping
         last_msg = msgs[-1] if msgs else None
@@ -273,6 +321,17 @@ class HealthcareAgent(BaseAgent):
         
         print("Decision: triage_nurse")
         return {"next": "triage_nurse"}
+
+    async def _data_agent_node(self, state: AgentState):
+        print("--- DATA AGENT NODE ---")
+        sys = SystemMessage(content=(
+            "You are a Data Clerk. Your goal is to fetch and provide requested data directly.\n"
+            "Do NOT create a care plan. Do NOT ask for follow-up details unless critical identifiers are missing.\n"
+            "Use tools (patient_record, policy_check, etc.) to get the data, then summarizing the answer concisely.\n"
+            "If the user asks for a patient summary, allergies, or policy list, just provide it."
+        ))
+        ai_msg = await self.llm.bind_tools(self.tools).ainvoke([sys] + state["messages"])
+        return {"messages": [ai_msg]}
 
     async def _triage_nurse_node(self, state: AgentState):
         print("--- TRIAGE NURSE NODE ---")
