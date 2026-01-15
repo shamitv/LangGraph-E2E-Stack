@@ -62,27 +62,30 @@ It will integrate with our existing:
 ## 4. Integration TO-DOs
 
 ### Phase 1: Setup & Data
-- [ ] Update `backend/app/core/config.py` to add `DATA_DIR` setting (defaulting to project root `data/`).
-- [ ] Create `backend/app/agents/healthcare_agent.py`.
-- [ ] Create `backend/app/tools/healthcare/` package.
-- [ ] Create `{DATA_DIR}/policies/` and populate with `README.md` + policy files (from example repo).
-- [ ] Register `HealthcareAgent` in `AgentFactory` (`backend/app/agents/agent_factory.py`).
+- [x] Update `backend/app/core/config.py` to add `DATA_DIR` setting (defaulting to project root `data/`).
+- [x] Create `backend/app/agents/healthcare_agent.py`.
+- [x] Create `backend/app/tools/healthcare/` package.
+- [x] Create `{DATA_DIR}/policies/` and populate with `README.md` + policy files (from example repo).
+- [x] Register `HealthcareAgent` in `AgentFactory` (`backend/app/agents/agent_factory.py`).
 
 ### Phase 2: Tool Implementation
-- [ ] Implement `patient_record`, `appointment_slots`, `medication_info`, `coverage_check`.
-- [ ] Implement `policy_check` logic:
+- [x] Implement `patient_record`, `appointment_slots`, `medication_info`, `coverage_check`.
+- [x] Implement `policy_check` logic:
     -   Dependency: `data/policies` path configuration.
     -   Dependency: Secondary `LLM` instance for policy analysis (re-use main LLM config).
 
 ### Phase 3: Graph & Supervisor
-- [ ] Implement `HealthcareAgent._build_graph`.
-- [ ] Implement `supervisor` node logic.
-- [ ] Implement `triage_nurse` node logic (bind tools).
-- [ ] Implement `care_coordinator` node logic (final output).
+- [x] Implement `HealthcareAgent._build_graph`.
+- [x] Implement `supervisor` node logic.
+- [x] Implement `triage_nurse` node logic (bind tools).
+- [x] Implement `care_coordinator` node logic (final output).
 
 ### Phase 4: Streaming
-- [ ] Implement `astream_events` in `HealthcareAgent`.
-- [ ] Ensure specific node activities (e.g., "Calling policy_check") emit visible `StatusEvent`s.
+- [x] Implement `astream_events` in `HealthcareAgent`.
+- [x] Ensure specific node activities (e.g., "Calling policy_check") emit visible `StatusEvent`s.
+
+### Phase 5: Testing
+- [ ] Write a command-line script to run the agent in isolation (single prompt + streaming output) for quick validation.
 
 ## 5. UI Implications
 -   No specific UI changes needed if generic streaming is robust.
