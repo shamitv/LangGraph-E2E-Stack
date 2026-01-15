@@ -91,6 +91,22 @@ class HealthcareAgent(BaseAgent):
                 return str(msg.content)
         return ""
 
+    def _extract_date_range(self, messages: List[BaseMessage]) -> str | None:
+        for msg in reversed(messages):
+            if not isinstance(msg, HumanMessage) or not msg.content:
+                continue
+            text = str(msg.content).lower()
+            match = re.search(r"\bnext\s+(two|2)\s+weeks\b", text)
+            if match:
+                return "next two weeks"
+            match = re.search(r"\bnext\s+14\s+days\b", text)
+            if match:
+                return "next 14 days"
+            match = re.search(r"\bwithin\s+the\s+next\s+(two|2)\s+weeks\b", text)
+            if match:
+                return "next two weeks"
+        return None
+
     def _infer_intents(self, text: str) -> dict:
         lower = text.lower()
         return {
@@ -224,17 +240,20 @@ class HealthcareAgent(BaseAgent):
         print("--- TRIAGE NURSE NODE ---")
         user_text = self._latest_user_text(state["messages"])
         patient_id = self._extract_patient_id(user_text)
+        date_range = self._extract_date_range(state["messages"])
         sys = SystemMessage(content=(
             "You are a triage nurse. Use tools to gather facts relevant to the user's request.\n"
             f"User request: {user_text or '(no user text provided)'}\n"
             f"Detected patient_id: {patient_id or '(none)'}\n"
+            f"Known date_range: {date_range or '(none)'}\n"
             "Guidance:\n"
             "- If a patient_id is available, call patient_record(patient_id=...).\n"
             "- If the request mentions imaging (MRI/CT/scan), call policy_check(request_type='imaging', details='<request>').\n"
             "- If the request mentions medication, call medication_info(drug=...).\n"
             "- If coverage/cost is asked and you have plan/service, call coverage_check(insurance_plan=..., service=...).\n"
             "- If scheduling is requested and you have clinic/specialty/date_range, call appointment_slots(...).\n"
-            "If required details are missing, ask a brief clarification question."
+            "If required details are missing, ask a brief clarification question.\n"
+            "If a Known date_range is provided, do not ask for date range or default to a different window; reuse the wording given."
         ))
         ai_msg = await self.llm.bind_tools(self.tools).ainvoke([sys] + state["messages"])
         return {"messages": [ai_msg]}

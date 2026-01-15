@@ -1,7 +1,7 @@
 """Chat API endpoints."""
 import uuid
 from fastapi import APIRouter, HTTPException
-from langchain.messages import HumanMessage, AIMessage
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from app.schemas import ChatRequest, ChatResponse
 from app.schemas import ChatRequest, ChatResponse
 from app.agents import AgentFactory
@@ -12,6 +12,17 @@ import logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+SESSION_HISTORY: dict[str, list[BaseMessage]] = {}
+MAX_HISTORY_MESSAGES = 20
+
+
+def _get_history(session_id: str) -> list[BaseMessage]:
+    return SESSION_HISTORY.get(session_id, []).copy()
+
+
+def _save_history(session_id: str, history: list[BaseMessage]) -> None:
+    SESSION_HISTORY[session_id] = history[-MAX_HISTORY_MESSAGES:]
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -33,10 +44,13 @@ async def chat(request: ChatRequest):
         
         # For now, we're not persisting history - this would be added later
         # In a production system, you'd fetch conversation history from the database
-        history = []
+        history = _get_history(session_id)
         
         # Process the message
         result = await agent.process(request.message, history)
+
+        updated_history = history + [HumanMessage(content=request.message), AIMessage(content=result["content"])]
+        _save_history(session_id, updated_history)
         
         return ChatResponse(
             message=result["content"],
@@ -69,14 +83,24 @@ async def stream_chat(request: ChatRequest):
 
             # Use streaming interface
             # TODO: Fetch real history from DB
-            history = []
+            history = _get_history(session_id)
+            assistant_content = ""
             
             async for event in agent.astream_events(request.message, history):
                 # Serialize event to JSON
                 # Provide explicit mapping or rely on pydantic .model_dump_json()
                 event_type = event.type
+                if event_type == "message":
+                    assistant_content += event.content
                 payload = event.model_dump_json()
                 yield f"event: {event_type}\ndata: {payload}\n\n"
+
+            if assistant_content:
+                updated_history = history + [
+                    HumanMessage(content=request.message),
+                    AIMessage(content=assistant_content),
+                ]
+                _save_history(session_id, updated_history)
                 
         except Exception as e:
             logger.error(f"Streaming error: {e}")

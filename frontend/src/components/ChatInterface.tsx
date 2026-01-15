@@ -9,7 +9,13 @@ const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId] = useState<string | null>(null);
+  const generateSessionId = () => {
+    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+      return crypto.randomUUID();
+    }
+    return Date.now().toString();
+  };
+  const [sessionId] = useState<string>(() => generateSessionId());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -53,7 +59,7 @@ const ChatInterface: React.FC = () => {
     streamService.streamChat(
       {
         message: inputValue,
-        session_id: sessionId || undefined,
+        session_id: sessionId,
         agent_type: 'healthcare',
       },
       (event) => {
