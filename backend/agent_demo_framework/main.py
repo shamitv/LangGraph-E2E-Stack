@@ -1,8 +1,8 @@
 """Main FastAPI application entry point."""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.config import settings
-from app.api import router as api_router
+from agent_demo_framework.core.config import settings
+from agent_demo_framework.api import router as api_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

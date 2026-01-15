@@ -1,9 +1,9 @@
 """Agent factory for creating and managing agents."""
 from typing import Dict
-from app.agents.base_agent import BaseAgent
-from app.agents.conversational_agent import ConversationalAgent
-from app.agents.multistep_agent import MultiStepAgent
-from app.agents.healthcare_agent import HealthcareAgent
+from agent_demo_framework.agents.base_agent import BaseAgent
+from agent_demo_framework.agents.conversational_agent import ConversationalAgent
+from agent_demo_framework.agents.multistep_agent import MultiStepAgent
+from agent_demo_framework.agents.healthcare_agent import HealthcareAgent
 
 
 class AgentFactory:

@@ -46,7 +46,7 @@ case "$1" in
         fi
         source venv/bin/activate
         pip install -r requirements.txt
-        uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+        uvicorn agent_demo_framework.main:app --reload --host 0.0.0.0 --port 8000
         ;;
     frontend)
         echo "⚛️  Starting frontend in local dev mode..."

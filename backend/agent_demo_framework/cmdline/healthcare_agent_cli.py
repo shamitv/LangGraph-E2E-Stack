@@ -4,16 +4,10 @@ from __future__ import annotations
 import argparse
 import asyncio
 import sys
-from pathlib import Path
 from typing import Any
 
-# Ensure backend directory is on sys.path for app imports
-REPO_ROOT = Path(__file__).resolve().parents[2]
-BACKEND_ROOT = REPO_ROOT / "backend"
-sys.path.insert(0, str(BACKEND_ROOT))
-
-from app.agents.healthcare_agent import HealthcareAgent  # noqa: E402
-from app.schemas.stream import PlanEvent, StatusEvent, MessageEvent, ErrorEvent  # noqa: E402
+from agent_demo_framework.agents.healthcare_agent import HealthcareAgent
+from agent_demo_framework.schemas.stream import PlanEvent, StatusEvent, MessageEvent, ErrorEvent
 
 
 def _event_type(event: Any) -> str | None:

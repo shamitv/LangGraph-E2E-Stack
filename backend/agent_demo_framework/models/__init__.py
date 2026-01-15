@@ -1,4 +1,4 @@
 """Models module initialization."""
-from app.models.models import Conversation, Message, AgentExecution
+from agent_demo_framework.models.models import Conversation, Message, AgentExecution
 
 __all__ = ["Conversation", "Message", "AgentExecution"]

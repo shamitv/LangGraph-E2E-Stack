@@ -2,9 +2,8 @@
 import uuid
 from fastapi import APIRouter, HTTPException
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
-from app.schemas import ChatRequest, ChatResponse
-from app.schemas import ChatRequest, ChatResponse
-from app.agents import AgentFactory
+from agent_demo_framework.schemas import ChatRequest, ChatResponse
+from agent_demo_framework.agents import AgentFactory
 from fastapi.responses import StreamingResponse
 import json
 import logging

@@ -23,7 +23,7 @@ REM Install requirements if needed (uncomment to enable)
 REM call pip install -r requirements.txt
 
 REM Run uvicorn using the active Python interpreter (works when venv is activated)
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn agent_demo_framework.main:app --reload --host 0.0.0.0 --port 8000
 
 REM Pause so console remains open after server stops
 pause

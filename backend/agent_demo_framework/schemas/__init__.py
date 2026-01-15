@@ -1,5 +1,5 @@
 """Schemas module initialization."""
-from app.schemas.schemas import (
+from agent_demo_framework.schemas.schemas import (
     MessageCreate,
     MessageResponse,
     ChatRequest,
@@ -8,7 +8,7 @@ from app.schemas.schemas import (
     ConversationResponse,
     ConversationHistoryResponse,
 )
-from app.schemas.stream import (
+from agent_demo_framework.schemas.stream import (
     StreamEventType,
     StepInfo,
     PlanEvent,
