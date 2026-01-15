@@ -262,6 +262,7 @@ class HealthcareAgent(BaseAgent):
         
         # We manually stream node-by-node for better status updates
         state = {"messages": messages, "next": ""}
+        triage_completed_sent = False
         
         # 1. Triage Phase
         yield StatusEvent(step_id="triage", status="running", details="Starting triage process...")
@@ -292,6 +293,7 @@ class HealthcareAgent(BaseAgent):
                     # Mark triage as done once we reach coordination
                     yield StatusEvent(step_id="triage", status="completed", details="Triage complete.")
                     yield StatusEvent(step_id="coordination", status="running", details="Drafting care plan...")
+                    triage_completed_sent = True
             
             elif kind == "on_node_end":
                 node = event["name"]
@@ -299,6 +301,8 @@ class HealthcareAgent(BaseAgent):
                     # Update status after triage node finishes
                     yield StatusEvent(step_id="triage", status="running", details="Triage logic complete, checking supervisor...")
         
+        if not triage_completed_sent:
+            yield StatusEvent(step_id="triage", status="completed", details="Triage complete.")
         yield StatusEvent(step_id="coordination", status="completed", details="Care plan complete.")
         yield MessageEvent(content="", is_final=True)
 
