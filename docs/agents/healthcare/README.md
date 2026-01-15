@@ -15,7 +15,7 @@ The agent is implemented as a `StateGraph` with the following nodes:
     *   **Triage Nurse** (`coordination` task): For complex requests requiring multiple steps, scheduling, or care planning.
     *   **Care Coordinator**: Synthesizes the final plan after triage.
 
-2.  **Data Agent**: A "Data Clerk" focused on direct answers. It calls tools and returns the raw data or a concise summary directly to the user.
+2.  **Data Agent**: An "Information Assistant" focused on direct answers. It calls tools and returns the raw data or a concise summary directly to the user.
 
 3.  **Triage Nurse**: Focused on gathering detailed context for care planning. It determines which tools to call for complex workflows.
 

@@ -48,5 +48,5 @@ The **Data Agent** successfully handles informational queries (e.g., patient loo
 ### Query 5: LLM Routing (Typo Handling)
 **Query**: "What do we knwo about Noah" (Note the typo "knwo")
 *   **Previous Behavior**: Regex failed to match "general" intent keywords; defaulted to Care Coordinator.
-*   **New Behavior**: **LLM Router** correctly identified "general" intent despite the typo. Agent asked for clarification (Data Clerk style) without crashing.
+*   **New Behavior**: **LLM Router** correctly identified "general" intent despite the typo. Agent asked for clarification (Information Assistant style) without crashing.
 *   **Observation**: Infinite loop issue resolved; agent responds exactly once.

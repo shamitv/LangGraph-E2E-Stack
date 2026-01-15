@@ -239,7 +239,13 @@ class HealthcareAgent(BaseAgent):
                     return True
         return False
 
-    def _build_plan_steps(self, user_text: str) -> list[dict]:
+    def _build_plan_steps(self, user_text: str, task_type: str | None = None) -> list[dict]:
+        if task_type == "general":
+            return [
+                {"id": "data_agent", "description": "Information Assistant: Retrieve specific information", "status": "pending"}
+            ]
+        
+        # Default / Coordination path
         intents = self._infer_intents(user_text)
         actions: list[str] = []
         if intents["needs_patient"]:
@@ -336,7 +342,7 @@ class HealthcareAgent(BaseAgent):
     async def _data_agent_node(self, state: AgentState):
         print("--- DATA AGENT NODE ---")
         sys = SystemMessage(content=(
-            "You are a Data Clerk. Your goal is to fetch and provide requested data directly.\n"
+            "You are an Information Assistant. Your goal is to fetch and provide requested data directly.\n"
             "Do NOT create a care plan. Do NOT ask for follow-up details unless critical identifiers are missing.\n"
             "Use tools (patient_record, policy_check, etc.) to get the data, then summarizing the answer concisely.\n"
             "If the user asks for a patient summary, allergies, or policy list, just provide it."
@@ -382,17 +388,24 @@ class HealthcareAgent(BaseAgent):
         return {"content": result["messages"][-1].content}
 
     async def astream_events(self, message: str, history: List[BaseMessage]) -> AsyncGenerator[Any, None]:
+        # Pre-calculate intent to align UI Plan with Graph Execution
+        task_type = self._determine_task_type(message)
+        
         # Initial Plan
-        yield PlanEvent(steps=self._build_plan_steps(message))
+        yield PlanEvent(steps=self._build_plan_steps(message, task_type=task_type))
 
         messages = history + [HumanMessage(content=message)]
         
         # We manually stream node-by-node for better status updates
-        state = {"messages": messages, "next": ""}
+        # Inject task_type into state so Supervisor doesn't need to re-calc
+        state = {"messages": messages, "next": "", "task_type": task_type}
         triage_completed_sent = False
         
-        # 1. Triage Phase
-        yield StatusEvent(step_id="triage", status="running", details="Starting triage process...")
+        # 1. Triage Phase (only if coordination)
+        if task_type == "coordination":
+            yield StatusEvent(step_id="triage", status="running", details="Starting triage process...")
+        else:
+             yield StatusEvent(step_id="data_agent", status="running", details="Data Agent executing...")
         
         async for event in self.graph.astream_events(state, version="v1", config={"recursion_limit": settings.HEALTHCARE_RECURSION_LIMIT}):
             kind = event["event"]
@@ -412,7 +425,10 @@ class HealthcareAgent(BaseAgent):
             
             elif kind == "on_tool_start":
                 tool_name = event["name"]
-                yield StatusEvent(step_id="triage", status="running", details=f"Calling tool: {tool_name}...")
+                if task_type == "coordination":
+                     yield StatusEvent(step_id="triage", status="running", details=f"Calling tool: {tool_name}...")
+                else:
+                     yield StatusEvent(step_id="data_agent", status="running", details=f"Calling tool: {tool_name}...")
             
             elif kind == "on_node_start":
                 node = event["name"]
@@ -427,11 +443,18 @@ class HealthcareAgent(BaseAgent):
                 if node == "triage_nurse":
                     # Update status after triage node finishes
                     yield StatusEvent(step_id="triage", status="running", details="Triage logic complete, checking supervisor...")
+                elif node == "data_agent":
+                     yield StatusEvent(step_id="data_agent", status="completed", details="Data retrieval complete.")
         
-        if not triage_completed_sent:
-            yield StatusEvent(step_id="triage", status="completed", details="Triage complete.")
-        yield StatusEvent(step_id="coordination", status="completed", details="Care plan complete.")
+        if task_type == "coordination":
+            if not triage_completed_sent:
+                yield StatusEvent(step_id="triage", status="completed", details="Triage complete.")
+            yield StatusEvent(step_id="coordination", status="completed", details="Care plan complete.")
+        else:
+             yield StatusEvent(step_id="data_agent", status="completed", details="Data retrieval complete.")
+        
         yield MessageEvent(content="", is_final=True)
+        
 
     def get_agent_info(self) -> dict:
         return {
