@@ -61,4 +61,4 @@ Clinical policies are stored as Markdown files in `data/policies/`. The `policy_
 We validate the agent using a suite of 20 test queries covering all capabilities.
 
 ### Validation Run Logs
-See [Validation Report](validation.md) for detailed results and screenshots from the latest run (Queries 1-6).
+See [Query Walkthrough](query_walkthrough.md) for detailed results and screenshots from the latest run (Queries 1-6).
