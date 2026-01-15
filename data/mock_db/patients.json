@@ -1,0 +1,38 @@
+{
+    "PT-1001": {
+        "patient_id": "PT-1001",
+        "name": "Jordan Lee",
+        "age": 34,
+        "sex": "F",
+        "allergies": [
+            "penicillin"
+        ],
+        "conditions": [
+            "asthma",
+            "seasonal allergies"
+        ],
+        "current_meds": [
+            "albuterol inhaler",
+            "cetirizine"
+        ],
+        "insurance_plan": "ACME-HMO-SILVER",
+        "preferred_clinic": "Downtown Primary Care",
+        "preferred_visit_type": "telehealth"
+    },
+    "PT-2002": {
+        "patient_id": "PT-2002",
+        "name": "Sam Patel",
+        "age": 16,
+        "sex": "M",
+        "allergies": [],
+        "conditions": [
+            "migraine"
+        ],
+        "current_meds": [
+            "ibuprofen (OTC)"
+        ],
+        "insurance_plan": "ACME-PPO-GOLD",
+        "preferred_clinic": "Northside Pediatrics",
+        "preferred_visit_type": "in_person"
+    }
+}
