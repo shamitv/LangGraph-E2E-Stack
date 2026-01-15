@@ -11,7 +11,7 @@ We will transition from a synchronous REST API (`POST /chat`) to a **streaming a
 
 ### 2.1 Backend Changes
 
-#### API Layer (`backend/app/api/chat.py`)
+#### API Layer (`backend/agent_demo_framework/api/chat.py`)
 - **New Endpoint**: `POST /api/v1/chat/stream`
 - **Mechanism**: StreamingResponse (FastAPI) yielding SSE-formatted data.
 - **Event Protocol**:
@@ -76,9 +76,9 @@ We will transition from a synchronous REST API (`POST /chat`) to a **streaming a
 ## 5. Implementation Status (2026-01-14)
 
 ### Completed
-- [x] **Backend**: Defined `PlanEvent`, `StatusEvent`, `MessageEvent` schemas in `backend/app/schemas/stream.py`.
+- [x] **Backend**: Defined `PlanEvent`, `StatusEvent`, `MessageEvent` schemas in `backend/agent_demo_framework/schemas/stream.py`.
 - [x] **Backend**: Implemented `MultiStepAgent` mock for testing.
-- [x] **Backend**: Added `POST /api/v1/chat/stream` SSE endpoint in `backend/app/api/chat.py`.
+- [x] **Backend**: Added `POST /api/v1/chat/stream` SSE endpoint in `backend/agent_demo_framework/api/chat.py`.
 - [x] **Frontend**: Created `streamService` with `fetch` and `TextDecoder` in `frontend/src/services/stream.ts`.
 - [x] **Frontend**: Implemented `StepProgress` UI component.
 - [x] **Frontend**: Integrated streaming into `ChatInterface`.

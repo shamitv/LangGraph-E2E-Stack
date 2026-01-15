@@ -1,0 +1,10 @@
+include agent_demo_framework/data/mock_db/*.json
+include agent_demo_framework/data/policies/*.md
+include agent_demo_framework/data/policies/README.md
+recursive-include agent_demo_framework/ui/dist *
+recursive-include agent_demo_framework/ui/src *
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude .env
+global-exclude venv
+global-exclude node_modules

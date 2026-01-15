@@ -1,8 +1,8 @@
 import asyncio
 from typing import Dict, Any, List, AsyncGenerator
 from langchain_core.messages import BaseMessage
-from app.agents.base_agent import BaseAgent
-from app.schemas.stream import PlanEvent, StatusEvent, MessageEvent, StepInfo
+from agent_demo_framework.agents.base_agent import BaseAgent
+from agent_demo_framework.schemas.stream import PlanEvent, StatusEvent, MessageEvent, StepInfo
 
 class MultiStepAgent(BaseAgent):
     """A mock agent that simulates a multi-step process with streaming updates."""

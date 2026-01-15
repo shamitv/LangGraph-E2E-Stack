@@ -1,7 +1,7 @@
 """Database models."""
 from sqlalchemy import Column, Integer, String, Text, DateTime, JSON
 from sqlalchemy.sql import func
-from app.db.database import Base
+from agent_demo_framework.db.database import Base
 
 
 class Conversation(Base):

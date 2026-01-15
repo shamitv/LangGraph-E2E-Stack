@@ -56,7 +56,7 @@
 
 4. **Start backend**
    ```bash
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   uvicorn agent_demo_framework.main:app --reload --host 0.0.0.0 --port 8000
    ```
 
 ### Frontend Setup

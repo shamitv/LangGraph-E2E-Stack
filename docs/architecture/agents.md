@@ -10,7 +10,7 @@ This document describes the AI agents currently implemented in the LangGraph E2E
 
 The `ConversationalAgent` is a general-purpose chatbot designed for open-ended interaction. 
 
-- **Implementation**: `backend/app/agents/conversational_agent.py`
+- **Implementation**: `backend/agent_demo_framework/agents/conversational_agent.py`
 - **Frameworks**: LangGraph, LangChain, OpenAI
 - **Configuration**: 
   - Uses `OPENAI_MODEL_NAME` (default: `gpt-3.5-turbo`) defined in `.env`.
@@ -26,12 +26,12 @@ To add a new agent to the system, follow these steps:
 
 ### 1. Create the Agent Class
 
-Create a new file in `backend/app/agents/` (e.g., `my_custom_agent.py`). Your class must inherit from `BaseAgent` and implement the required methods.
+Create a new file in `backend/agent_demo_framework/agents/` (e.g., `my_custom_agent.py`). Your class must inherit from `BaseAgent` and implement the required methods.
 
 ```python
 from typing import Dict, Any, List
 from langchain_core.messages import BaseMessage
-from app.agents.base_agent import BaseAgent
+from agent_demo_framework.agents.base_agent import BaseAgent
 
 class MyCustomAgent(BaseAgent):
     def __init__(self):
@@ -56,14 +56,14 @@ class MyCustomAgent(BaseAgent):
 
 ### 2. Register in Agent Factory
 
-Update `backend/app/agents/agent_factory.py` to include your new agent.
+Update `backend/agent_demo_framework/agents/agent_factory.py` to include your new agent.
 
 1.  Import your new agent class.
 2.  Update `get_agent` to return an instance of your agent when requested.
 
 ```python
 # ... imports
-from app.agents.my_custom_agent import MyCustomAgent
+from agent_demo_framework.agents.my_custom_agent import MyCustomAgent
 
 class AgentFactory:
     # ...

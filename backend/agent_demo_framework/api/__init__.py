@@ -1,6 +1,6 @@
 """API router initialization."""
 from fastapi import APIRouter
-from app.api import chat
+from agent_demo_framework.api import chat
 
 router = APIRouter()
 

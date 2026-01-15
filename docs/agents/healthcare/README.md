@@ -47,13 +47,13 @@ graph TD
 ## 3. Data Sources
 
 ### 3.1 Mock Database
-The agent uses file-based mock databases located in `data/mock_db/`:
+The agent uses file-based mock databases located in `backend/agent_demo_framework/data/mock_db/`:
 -   `patients.json`: Patient records, standardizing IDs like `PT-12345` to `John Doe`.
 -   `appointments.json`: Mock slots for cardiology, primary care, etc.
--   `medications.json`: Standard drug info.
+-   `meds.json`: Standard drug info.
 
 ### 3.2 Policy Engine
-Clinical policies are stored as Markdown files in `data/policies/`. The `policy_check` tool uses a two-step process:
+Clinical policies are stored as Markdown files in `backend/agent_demo_framework/data/policies/`. The `policy_check` tool uses a two-step process:
 1.  **retrieval**: Scans `README.md` in the policy dir to find relevant files.
 2.  **evaluation**: Reads the specific policy file (e.g., `imaging_policy.md`) and uses an LLM to compare the patient's data against the requirements.
 

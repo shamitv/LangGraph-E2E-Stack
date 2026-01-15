@@ -1,6 +1,6 @@
-# LangGraph E2E Demo
+# AgentOrchestra Stack
 
-A full-stack demonstration of LangGraph agents with a React chatbot UI and FastAPI backend. This project showcases how to build an end-to-end AI agent system with modern web technologies.
+A full-stack agent platform with a React chatbot UI and FastAPI backend. This project showcases how to build an end-to-end AI agent system with modern web technologies.
 
 ## 🏗️ Architecture
 
@@ -24,7 +24,7 @@ LangGraph-E2E-Demo/
 │   └── vite.config.ts
 │
 ├── backend/                 # FastAPI Backend
-│   ├── app/
+│   ├── agent_demo_framework/
 │   │   ├── agents/         # LangGraph agent implementations
 │   │   ├── api/            # FastAPI routes
 │   │   ├── core/           # Core configuration
@@ -46,6 +46,38 @@ LangGraph-E2E-Demo/
   - Python 3.11+
   - Node.js 20+
   - PostgreSQL 15+
+
+## 🧩 Development Install
+
+Set up the project for local development:
+
+1. Create a virtual environment and install backend deps:
+   - `cd backend`
+   - `python -m venv venv`
+   - `venv\Scripts\activate` (Windows) or `source venv/bin/activate` (macOS/Linux)
+   - `pip install -r requirements.txt`
+
+2. Install frontend deps:
+   - `cd ../frontend`
+   - `npm install`
+
+3. Run the backend and frontend:
+   - Backend: `uvicorn agent_demo_framework.main:app --reload --host 0.0.0.0 --port 8000`
+   - Frontend: `npm run dev`
+
+## 📦 Install from PyPI
+
+Install the backend package:
+
+```bash
+pip install agentorchestra-stack
+```
+
+Run the CLI (after configuring your environment variables):
+
+```bash
+healthcare-agent --message "I am patient PT-1001. I have been having bad back pain and need an MRI."
+```
 
 ### Option 1: Using Docker (Recommended)
 
@@ -110,7 +142,7 @@ LangGraph-E2E-Demo/
 
 7. **Start the backend server**
    ```bash
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   uvicorn agent_demo_framework.main:app --reload --host 0.0.0.0 --port 8000
    ```
 
 #### Frontend Setup
@@ -175,7 +207,7 @@ The project includes a conversational agent powered by LangGraph:
 
 - **ConversationalAgent** - A general-purpose chatbot using GPT-3.5-turbo
 
-You can extend this by creating new agents in `backend/app/agents/` that inherit from `BaseAgent`.
+You can extend this by creating new agents in `backend/agent_demo_framework/agents/` that inherit from `BaseAgent`.
 
 ## 🗄️ Database Schema
 

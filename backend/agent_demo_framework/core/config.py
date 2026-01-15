@@ -2,6 +2,7 @@ from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
 import os
+import agent_demo_framework
 
 # Explicitly load .env file
 load_dotenv()
@@ -24,9 +25,9 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./langgraph_demo.db"
     
-    # Data Directory (repo-level `data/`)
+    # Data Directory (package-relative)
     DATA_DIR: str = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
+        os.path.dirname(os.path.abspath(agent_demo_framework.__file__)),
         "data",
     )
     

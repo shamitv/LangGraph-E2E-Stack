@@ -5,9 +5,9 @@ from sqlalchemy import pool
 from alembic import context
 
 # Import your models here
-from app.db.database import Base
-from app.models import models  # noqa
-from app.core.config import settings
+from agent_demo_framework.db.database import Base
+from agent_demo_framework.models import models  # noqa
+from agent_demo_framework.core.config import settings
 
 # This is the Alembic Config object
 config = context.config

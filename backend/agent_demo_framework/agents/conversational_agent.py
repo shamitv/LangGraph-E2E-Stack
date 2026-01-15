@@ -5,9 +5,9 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import BaseMessage
 from langchain.messages import HumanMessage, AIMessage, SystemMessage
 from langgraph.graph import StateGraph, END
-from app.agents.base_agent import BaseAgent
-from app.core.config import settings
-from app.schemas.stream import PlanEvent, StatusEvent, MessageEvent, StepInfo
+from agent_demo_framework.agents.base_agent import BaseAgent
+from agent_demo_framework.core.config import settings
+from agent_demo_framework.schemas.stream import PlanEvent, StatusEvent, MessageEvent, StepInfo
 from typing import AsyncGenerator
 import json
 

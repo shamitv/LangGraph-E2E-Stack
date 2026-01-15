@@ -35,7 +35,7 @@ See the [README.md](README.md) for detailed setup instructions.
 
 To add a new agent:
 
-1. Create a new file in `backend/app/agents/` (e.g., `my_agent.py`)
+1. Create a new file in `backend/agent_demo_framework/agents/` (e.g., `my_agent.py`)
 2. Inherit from `BaseAgent` class
 3. Implement required methods: `process()` and `get_agent_info()`
 4. Register your agent in `agent_factory.py`
@@ -44,7 +44,7 @@ To add a new agent:
 Example:
 
 ```python
-from app.agents.base_agent import BaseAgent
+from agent_demo_framework.agents.base_agent import BaseAgent
 from typing import Dict, Any, List
 from langchain.schema import BaseMessage
 
