@@ -112,6 +112,18 @@ class HealthcareAgent(BaseAgent):
                 results.append((name, content))
         return results
 
+    def _collect_tool_calls(self, messages: List[BaseMessage]) -> list[dict]:
+        calls: list[dict] = []
+        for msg in messages:
+            tool_calls = getattr(msg, "tool_calls", None)
+            if tool_calls:
+                for call in tool_calls:
+                    if isinstance(call, dict):
+                        calls.append(call)
+                    elif hasattr(call, "dict"):
+                        calls.append(call.dict())
+        return calls
+
     def _has_patient_result(self, messages: List[BaseMessage]) -> bool:
         for name, content in self._collect_tool_results(messages):
             if name != "patient_record":
@@ -171,15 +183,17 @@ class HealthcareAgent(BaseAgent):
 
     async def _should_continue(self, state: AgentState):
         messages = state["messages"]
-        last_message = messages[-1]
-        if hasattr(last_message, "tool_calls") and last_message.tool_calls:
+        # If any tool calls are pending, continue to tools node for execution.
+        tool_calls = self._collect_tool_calls(messages)
+        if tool_calls:
             return "continue"
         return "end"
 
     async def _supervisor_node(self, state: AgentState):
         msgs = state["messages"]
-        # Count tool calls to prevent infinite loops
-        tool_call_count = len([m for m in msgs if hasattr(m, "tool_calls") and m.tool_calls])
+        # Count tool outputs to prevent infinite loops (robust to ToolMessage vs tool_calls attr)
+        tool_call_count = len(self._collect_tool_results(msgs))
+        pending_tool_calls = len(self._collect_tool_calls(msgs))
         
         # Check for key data points based on tool outputs
         has_patient = self._has_patient_result(msgs)
@@ -188,6 +202,11 @@ class HealthcareAgent(BaseAgent):
         print(f"\n--- SUPERVISOR NODE ({len(msgs)} msgs, {tool_call_count} tool calls) ---")
         print(f"Status: patient={has_patient}, policy={has_policy}")
         
+        # If there are pending tool calls, always return to triage/tools
+        if pending_tool_calls:
+            print("Decision: triage_nurse (pending tool calls)")
+            return {"next": "triage_nurse"}
+
         # If we have the basics or have tried too many times, go to coordinator
         if (has_patient and has_policy) or tool_call_count >= 6:
             print("Decision: care_coordinator")
