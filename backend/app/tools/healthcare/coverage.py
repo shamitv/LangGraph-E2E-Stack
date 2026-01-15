@@ -1,5 +1,7 @@
 import json
+import os
 from langchain_core.tools import tool
+from ...core.config import settings
 
 @tool("coverage_check")
 def coverage_check(insurance_plan: str, service: str) -> str:
@@ -8,22 +10,17 @@ def coverage_check(insurance_plan: str, service: str) -> str:
     """
     plan = insurance_plan.strip().upper()
     svc = service.strip().lower()
+    db_path = os.path.join(settings.DATA_DIR, "mock_db", "coverage.json")
+    if not os.path.exists(db_path):
+        return json.dumps({"error": f"Coverage database not found at {db_path}"}, indent=2)
 
-    # Mock rules
-    matrix = {
-        "ACME-HMO-SILVER": {
-            "primary_care_visit": {"copay": "$25", "preauth_required": False},
-            "specialist_visit": {"copay": "$50", "preauth_required": False},
-            "mri": {"copay": "$150", "preauth_required": True},
-            "controller_inhaler_refill": {"copay": "$10", "preauth_required": False},
-        },
-        "ACME-PPO-GOLD": {
-            "primary_care_visit": {"copay": "$20", "preauth_required": False},
-            "specialist_visit": {"copay": "$40", "preauth_required": False},
-            "mri": {"copay": "$100", "preauth_required": True},
-        },
-    }
+    try:
+        with open(db_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception as e:
+        return json.dumps({"error": f"Error reading coverage database: {e}"}, indent=2)
 
+    matrix = data.get("plans", {})
     if plan not in matrix:
         return json.dumps({"insurance_plan": plan, "service": service, "note": "Unknown plan in mock coverage DB."}, indent=2)
 

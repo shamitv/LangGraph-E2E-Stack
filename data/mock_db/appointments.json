@@ -1,0 +1,59 @@
+{
+  "appointments": [
+    {
+      "clinic": "Cardiology - Main Campus",
+      "specialty": "cardiology",
+      "date_range": "next_14_days",
+      "slots": [
+        {"type": "in_person", "start": "2026-01-20 09:30", "provider": "Dr. Rao"},
+        {"type": "in_person", "start": "2026-01-23 13:00", "provider": "Dr. Rao"},
+        {"type": "telehealth", "start": "2026-01-24 10:00", "provider": "Dr. Chen"}
+      ]
+    },
+    {
+      "clinic": "Cardiology - North Campus",
+      "specialty": "cardiology",
+      "date_range": "next_14_days",
+      "slots": [
+        {"type": "in_person", "start": "2026-01-21 11:00", "provider": "Dr. Singh"}
+      ]
+    },
+    {
+      "clinic": "Downtown Primary Care",
+      "specialty": "primary_care",
+      "date_range": "next_7_days",
+      "slots": [
+        {"type": "telehealth", "start": "2026-01-15 10:30", "provider": "Dr. Kim"},
+        {"type": "in_person", "start": "2026-01-16 16:00", "provider": "Dr. Kim"},
+        {"type": "telehealth", "start": "2026-01-17 09:00", "provider": "NP Rivera"}
+      ]
+    },
+    {
+      "clinic": "Downtown Primary Care",
+      "specialty": "pulmonology",
+      "date_range": "next_14_days",
+      "slots": [
+        {"type": "in_person", "start": "2026-01-22 11:00", "provider": "Dr. Chen"},
+        {"type": "in_person", "start": "2026-01-28 14:30", "provider": "Dr. Chen"}
+      ]
+    },
+    {
+      "clinic": "Downtown Primary Care",
+      "specialty": "radiology",
+      "date_range": "next_7_days",
+      "slots": [
+        {"type": "in_person", "start": "2026-01-16 09:00", "provider": "Imaging Center A"},
+        {"type": "in_person", "start": "2026-01-19 14:00", "provider": "Imaging Center A"}
+      ]
+    },
+    {
+      "clinic": "Northside Pediatrics",
+      "specialty": "pediatrics",
+      "date_range": "next_7_days",
+      "slots": [
+        {"type": "in_person", "start": "2026-01-15 15:00", "provider": "Dr. Owens"},
+        {"type": "telehealth", "start": "2026-01-18 12:00", "provider": "Dr. Owens"}
+      ]
+    }
+  ]
+}

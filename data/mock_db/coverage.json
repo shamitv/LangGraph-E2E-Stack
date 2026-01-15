@@ -1,0 +1,17 @@
+{
+  "plans": {
+    "ACME-HMO-SILVER": {
+      "primary_care_visit": {"copay": "$25", "preauth_required": false},
+      "specialist_visit": {"copay": "$50", "preauth_required": false},
+      "mri": {"copay": "$150", "preauth_required": true},
+      "controller_inhaler_refill": {"copay": "$10", "preauth_required": false},
+      "aspirin": {"copay": "$5", "preauth_required": false}
+    },
+    "ACME-PPO-GOLD": {
+      "primary_care_visit": {"copay": "$20", "preauth_required": false},
+      "specialist_visit": {"copay": "$40", "preauth_required": false},
+      "mri": {"copay": "$100", "preauth_required": true},
+      "aspirin": {"copay": "$5", "preauth_required": false}
+    }
+  }
+}

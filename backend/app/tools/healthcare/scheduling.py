@@ -1,5 +1,7 @@
 import json
+import os
 from langchain_core.tools import tool
+from ...core.config import settings
 
 @tool("appointment_slots")
 def appointment_slots(clinic: str, specialty: str, date_range: str = "next_7_days") -> str:
@@ -7,31 +9,43 @@ def appointment_slots(clinic: str, specialty: str, date_range: str = "next_7_day
     Return available appointment slots for a clinic and specialty within a date range.
     date_range examples: 'next_7_days', 'next_14_days'.
     """
-    slots = {
-        ("Downtown Primary Care", "primary_care", "next_7_days"): [
-            {"type": "telehealth", "start": "2026-01-15 10:30", "provider": "Dr. Kim"},
-            {"type": "in_person", "start": "2026-01-16 16:00", "provider": "Dr. Kim"},
-            {"type": "telehealth", "start": "2026-01-17 09:00", "provider": "NP Rivera"},
-        ],
-        ("Downtown Primary Care", "pulmonology", "next_14_days"): [
-            {"type": "in_person", "start": "2026-01-22 11:00", "provider": "Dr. Chen"},
-            {"type": "in_person", "start": "2026-01-28 14:30", "provider": "Dr. Chen"},
-        ],
-        ("Downtown Primary Care", "radiology", "next_7_days"): [
-            {"type": "in_person", "start": "2026-01-16 09:00", "provider": "Imaging Center A"},
-            {"type": "in_person", "start": "2026-01-19 14:00", "provider": "Imaging Center A"},
-        ],
-        ("Northside Pediatrics", "pediatrics", "next_7_days"): [
-            {"type": "in_person", "start": "2026-01-15 15:00", "provider": "Dr. Owens"},
-            {"type": "telehealth", "start": "2026-01-18 12:00", "provider": "Dr. Owens"},
-        ],
-    }
+    db_path = os.path.join(settings.DATA_DIR, "mock_db", "appointments.json")
+    if not os.path.exists(db_path):
+        return json.dumps({"error": f"Appointments database not found at {db_path}"}, indent=2)
 
-    key = (clinic, specialty, date_range)
-    if key in slots:
-        return json.dumps({"clinic": clinic, "specialty": specialty, "date_range": date_range, "slots": slots[key]}, indent=2)
+    try:
+        with open(db_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception as e:
+        return json.dumps({"error": f"Error reading appointments database: {e}"}, indent=2)
+
+    entries = data.get("appointments", [])
+    matches = [
+        entry for entry in entries
+        if entry.get("clinic") == clinic
+        and entry.get("specialty") == specialty
+        and entry.get("date_range") == date_range
+    ]
+
+    if matches:
+        entry = matches[0]
+        return json.dumps(
+            {
+                "clinic": clinic,
+                "specialty": specialty,
+                "date_range": date_range,
+                "slots": entry.get("slots", []),
+            },
+            indent=2,
+        )
 
     return json.dumps(
-        {"clinic": clinic, "specialty": specialty, "date_range": date_range, "slots": [], "note": "No slots found for that combination."},
+        {
+            "clinic": clinic,
+            "specialty": specialty,
+            "date_range": date_range,
+            "slots": [],
+            "note": "No slots found for that combination.",
+        },
         indent=2,
     )
