@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "langgraph-healthcare-agent"
+version = "0.1.0"
+description = "A LangGraph-based Healthcare Care Coordinator Agent"
+readme = "README.md"
+authors = [
+  { name = "Your Name", email = "your.email@example.com" },
+]
+license = { text = "MIT" }
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+requires-python = ">=3.9"
+dependencies = [
+  "fastapi>=0.128.0",
+  "uvicorn[standard]>=0.40.0",
+  "langgraph>=0.2.0",
+  "langchain>=0.3.0",
+  "langchain-openai>=0.2.1",
+  "pydantic>=2.12.0",
+  "pydantic-settings>=2.12.0",
+  "sqlalchemy>=2.0.0",
+  "alembic>=1.18.0",
+  "aiosqlite>=0.19.0",
+  "python-dotenv>=1.0.0",
+  "httpx>=0.28.0",
+  "aiohttp>=3.9.0",
+  "python-multipart>=0.0.9",
+  "tzdata>=2024.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/<org>/<repo>"
+Repository = "https://github.com/<org>/<repo>"
+Issues = "https://github.com/<org>/<repo>/issues"
+
+[project.scripts]
+healthcare-agent = "agent_demo_framework.cmdline.healthcare_agent_cli:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agent_demo_framework", "agent_demo_framework.*"]
+
+[tool.setuptools.package-data]
+agent_demo_framework = [
+  "data/mock_db/*.json",
+  "data/policies/*.md",
+  "data/policies/README.md",
+  "ui/dist/**",
+  "ui/src/**",
+]
