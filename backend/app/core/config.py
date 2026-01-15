@@ -24,10 +24,13 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./langgraph_demo.db"
     
+    # Data Directory
+    DATA_DIR: str = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
+    
     # OpenAI Configuration
     OPENAI_API_KEY: str = ""
     OPENAI_API_BASE: str = "https://api.openai.com/v1"
-    OPENAI_MODEL_NAME: str = "gpt-3.5-turbo"
+    OPENAI_MODEL_NAME: str = "gpt-5-nano"
     
     model_config = SettingsConfigDict(
         env_file=".env",
