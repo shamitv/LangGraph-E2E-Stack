@@ -98,32 +98,31 @@ It will integrate with our existing:
 -   No specific UI changes needed if generic streaming is robust.
 -   The "Execution Plan" will naturally show the supervisor's transitions (e.g., Supervisor -> Triage -> Tools -> Care Coordinator).
 
-
 ## 6. Test Queries for Agent Validation
 
-The following **20 queries** can be used to test the Healthcare Agent across its core capabilities (patient lookup, policy validation, coverage checks, appointment scheduling, and care‑plan generation). Add these to your test suite or run them manually to verify correct behavior.
+The following **20 queries** can be used to test the Healthcare Agent across its core capabilities (patient lookup, policy validation, coverage checks, appointment scheduling, and care-plan generation). Add these to your test suite or run them manually to verify correct behavior.
 
 | # | Query |
 |---|-------|
-| 1 | “Give me a summary of patient **John Doe** (MRN 12345).” |
-| 2 | “What are the current allergies for **Emily Chen**, MRN 67890?” |
-| 3 | “Check if **aspirin** is covered for patient **Michael Patel** under his insurance plan.” |
-| 4 | “Is a **CT scan of the abdomen** a pre‑authorized procedure for **Sarah Lee**?” |
-| 5 | “Find the next available **cardiology** appointment for **David Kim** within the next two weeks.” |
-| 6 | “List all **controlled substances** policies that apply to **patient #1122**.” |
-| 7 | “Does **patient #4455** have any outstanding **MRI** pre‑authorizations?” |
-| 8 | “Create a care‑plan for **Maria Gonzalez** with a focus on diabetes management and upcoming lab work.” |
-| 9 | “What is the copay amount for a **physical therapy** session for **John Doe**?” |
-|10| “Validate that **patient #9988**’s insurance covers **home health nursing** services.” |
-|11| “Schedule a **telehealth** follow‑up for **Emily Chen** on Thursday morning.” |
-|12| “Retrieve the most recent **lab results** for **Michael Patel**.” |
-|13| “Is a **flu vaccine** considered preventive and therefore covered for **Sarah Lee**?” |
-|14| “Check whether **patient #3322** is eligible for a **weight‑loss program** under their plan.” |
-|15| “Provide a list of **available orthopedic surgeons** for **David Kim** in the next month.” |
-|16| “Does the policy allow **off‑label use** of **drug X** for **Maria Gonzalez**?” |
-|17| “Summarize the **care coordination** steps needed for **John Doe** after his recent discharge.” |
-|18| “What documentation is required to obtain pre‑authorization for a **knee replacement** for **Emily Chen**?” |
-|19| “Verify that **patient #7777**’s plan covers **mental health counseling** sessions.” |
-|20| “Generate a discharge summary for **Michael Patel**, including medication changes and follow‑up appointments.” |
+| 1 | "Give me a summary of patient **John Doe** (MRN 12345)." |
+| 2 | "What are the current allergies for **Emily Chen**, MRN 67890?" |
+| 3 | "Check if **aspirin** is covered for patient **Michael Patel** under his insurance plan." |
+| 4 | "Is a **CT scan of the abdomen** a pre-authorized procedure for **Sarah Lee**?" |
+| 5 | "Find the next available **cardiology** appointment for **David Kim** within the next two weeks." |
+| 6 | "List all **controlled substances** policies that apply to **patient #1122**." |
+| 7 | "Does **patient #4455** have any outstanding **MRI** pre-authorizations?" |
+| 8 | "Create a care-plan for **Maria Gonzalez** with a focus on diabetes management and upcoming lab work." |
+| 9 | "What is the copay amount for a **physical therapy** session for **John Doe**?" |
+|10| "Validate that **patient #9988**'s insurance covers **home health nursing** services." |
+|11| "Schedule a **telehealth** follow-up for **Emily Chen** on Thursday morning." |
+|12| "Retrieve the most recent **lab results** for **Michael Patel**." |
+|13| "Is a **flu vaccine** considered preventive and therefore covered for **Sarah Lee**?" |
+|14| "Check whether **patient #3322** is eligible for a **weight-loss program** under their plan." |
+|15| "Provide a list of **available orthopedic surgeons** for **David Kim** in the next month." |
+|16| "Does the policy allow **off-label use** of **drug X** for **Maria Gonzalez**?" |
+|17| "Summarize the **care coordination** steps needed for **John Doe** after his recent discharge." |
+|18| "What documentation is required to obtain pre-authorization for a **knee replacement** for **Emily Chen**?" |
+|19| "Verify that **patient #7777**'s plan covers **mental health counseling** sessions." |
+|20| "Generate a discharge summary for **Michael Patel**, including medication changes and follow-up appointments." |
 
-These queries exercise the agent’s full workflow, ensuring that patient data retrieval, policy checks, scheduling, and care‑plan synthesis all function as expected.
+These queries exercise the agent's full workflow, ensuring that patient data retrieval, policy checks, scheduling, and care-plan synthesis all function as expected.
