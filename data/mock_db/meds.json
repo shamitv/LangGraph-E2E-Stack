@@ -1,0 +1,25 @@
+{
+  "albuterol": {
+    "class": "short-acting bronchodilator",
+    "common_use": "relief of acute asthma symptoms (rescue inhaler)",
+    "notes": [
+      "Often requires periodic clinician review for refill policies.",
+      "Check interaction/allergy history."
+    ]
+  },
+  "amoxicillin": {
+    "class": "antibiotic (penicillin family)",
+    "common_use": "bacterial infections (requires clinician evaluation)",
+    "notes": [
+      "Contraindicated if penicillin allergy is present.",
+      "Typically not prescribed without appropriate evaluation."
+    ]
+  },
+  "oxycodone": {
+    "class": "opioid analgesic (controlled substance)",
+    "common_use": "moderate-to-severe pain (strict policy controls)",
+    "notes": [
+      "Controlled substance: additional safeguards and in-person requirements may apply."
+    ]
+  }
+}

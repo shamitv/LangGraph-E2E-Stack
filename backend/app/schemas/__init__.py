@@ -5,7 +5,17 @@ from app.schemas.schemas import (
     ChatRequest,
     ChatResponse,
     ConversationResponse,
+    ConversationResponse,
     ConversationHistoryResponse,
+)
+from app.schemas.stream import (
+    StreamEventType,
+    StepInfo,
+    PlanEvent,
+    StatusEvent,
+    MessageEvent,
+    ErrorEvent,
+    StreamEvent
 )
 
 __all__ = [
@@ -14,5 +24,13 @@ __all__ = [
     "ChatRequest",
     "ChatResponse",
     "ConversationResponse",
+    "ConversationResponse",
     "ConversationHistoryResponse",
+    "StreamEventType",
+    "StepInfo",
+    "PlanEvent",
+    "StatusEvent",
+    "MessageEvent",
+    "ErrorEvent",
+    "StreamEvent"
 ]

@@ -2,14 +2,20 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader } from 'lucide-react';
 import ChatMessage from './ChatMessage';
 import { Message } from '../types';
-import { chatService } from '../services/api';
+import { streamService } from '../services/stream';
 import './ChatInterface.css';
 
 const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string>('');
+  const generateSessionId = () => {
+    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+      return crypto.randomUUID();
+    }
+    return Date.now().toString();
+  };
+  const [sessionId] = useState<string>(() => generateSessionId());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -35,38 +41,77 @@ const ChatInterface: React.FC = () => {
     setInputValue('');
     setIsLoading(true);
 
-    try {
-      const response = await chatService.sendMessage({
+    const assistantMsgId = (Date.now() + 1).toString();
+    const initialAssistantMessage: Message = {
+      id: assistantMsgId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      steps: []
+    };
+
+    setMessages((prev) => [...prev, initialAssistantMessage]);
+
+    // Track state for the current streaming message
+    let currentContent = '';
+    let currentSteps: any[] = [];
+
+    streamService.streamChat(
+      {
         message: inputValue,
-        session_id: sessionId || undefined,
-        agent_type: 'default',
-      });
+        session_id: sessionId,
+        agent_type: 'healthcare',
+      },
+      (event) => {
+        if (event.type === 'plan') {
+          currentSteps = event.steps;
+        } else if (event.type === 'status') {
+          currentSteps = currentSteps.map(step =>
+            step.id === event.step_id
+              ? { ...step, status: event.status, details: event.details }
+              : step
+          );
+        } else if (event.type === 'message') {
+          if (event.is_final) {
+            if (event.content) {
+              currentContent = event.content;
+            }
+          } else {
+            currentContent += event.content;
+          }
+        }
 
-      // Update session ID if this is the first message
-      if (!sessionId) {
-        setSessionId(response.session_id);
+        // Update message based on event type
+        setMessages((prev) => prev.map(msg => {
+          if (msg.id !== assistantMsgId) return msg;
+
+          if (event.type === 'plan' || event.type === 'status') {
+            return { ...msg, steps: currentSteps };
+          } else if (event.type === 'message') {
+            return { ...msg, content: currentContent };
+          } else if (event.type === 'error') {
+            return { ...msg, content: `Error: ${event.error}` };
+          }
+          return msg;
+        }));
+
+        // If it's a message event, setIsLoading might be done if is_final
+        if (event.type === 'message' && event.is_final) {
+          setIsLoading(false);
+        }
+      },
+      () => {
+        // On complete
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error('Stream error:', error);
+        setMessages((prev) => prev.map(msg =>
+          msg.id === assistantMsgId ? { ...msg, content: `Error: ${error}` } : msg
+        ));
+        setIsLoading(false);
       }
-
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: response.message,
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error sending message:', error);
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
+    );
   };
 
   return (

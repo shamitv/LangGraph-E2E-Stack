@@ -1,0 +1,241 @@
+{
+    "PT-1122": {
+        "patient_id": "PT-1122",
+        "name": "Avery Brooks",
+        "age": 58,
+        "sex": "M",
+        "allergies": [
+            "sulfa"
+        ],
+        "conditions": [
+            "chronic pain",
+            "hypertension"
+        ],
+        "current_meds": [
+            "gabapentin",
+            "lisinopril"
+        ],
+        "insurance_plan": "ACME-HMO-SILVER",
+        "preferred_clinic": "Downtown Primary Care",
+        "preferred_visit_type": "in_person",
+        "labs": [
+            {
+                "name": "BMP",
+                "date": "2025-12-05",
+                "result": "Within normal limits"
+            }
+        ]
+    },
+    "PT-1001": {
+        "patient_id": "PT-1001",
+        "name": "Jordan Lee",
+        "age": 34,
+        "sex": "F",
+        "allergies": [
+            "penicillin"
+        ],
+        "conditions": [
+            "asthma",
+            "seasonal allergies"
+        ],
+        "current_meds": [
+            "albuterol inhaler",
+            "cetirizine"
+        ],
+        "insurance_plan": "ACME-HMO-SILVER",
+        "preferred_clinic": "Downtown Primary Care",
+        "preferred_visit_type": "telehealth"
+    },
+    "PT-12345": {
+        "patient_id": "PT-12345",
+        "name": "John Doe",
+        "age": 46,
+        "sex": "M",
+        "allergies": [
+            "shellfish"
+        ],
+        "conditions": [
+            "hyperlipidemia"
+        ],
+        "current_meds": [
+            "atorvastatin"
+        ],
+        "insurance_plan": "ACME-HMO-SILVER",
+        "preferred_clinic": "Downtown Primary Care",
+        "preferred_visit_type": "in_person",
+        "labs": [
+            {
+                "name": "Lipid panel",
+                "date": "2025-11-20",
+                "result": "LDL 132 mg/dL"
+            }
+        ]
+    },
+    "PT-2002": {
+        "patient_id": "PT-2002",
+        "name": "Sam Patel",
+        "age": 16,
+        "sex": "M",
+        "allergies": [],
+        "conditions": [
+            "migraine"
+        ],
+        "current_meds": [
+            "ibuprofen (OTC)"
+        ],
+        "insurance_plan": "ACME-PPO-GOLD",
+        "preferred_clinic": "Northside Pediatrics",
+        "preferred_visit_type": "in_person"
+    },
+    "PT-3003": {
+        "patient_id": "PT-3003",
+        "name": "Michael Patel",
+        "age": 52,
+        "sex": "M",
+        "allergies": [],
+        "conditions": [
+            "type 2 diabetes",
+            "hypertension"
+        ],
+        "current_meds": [
+            "metformin",
+            "amlodipine"
+        ],
+        "insurance_plan": "ACME-PPO-GOLD",
+        "preferred_clinic": "Downtown Primary Care",
+        "preferred_visit_type": "in_person",
+        "labs": [
+            {
+                "name": "HbA1c",
+                "date": "2025-12-12",
+                "result": "7.4%"
+            },
+            {
+                "name": "CMP",
+                "date": "2025-12-12",
+                "result": "Within normal limits"
+            }
+        ]
+    },
+    "PT-4455": {
+        "patient_id": "PT-4455",
+        "name": "Sarah Lee",
+        "age": 39,
+        "sex": "F",
+        "allergies": [
+            "latex"
+        ],
+        "conditions": [
+            "abdominal pain"
+        ],
+        "current_meds": [
+            "ibuprofen (OTC)"
+        ],
+        "insurance_plan": "ACME-HMO-SILVER",
+        "preferred_clinic": "Downtown Primary Care",
+        "preferred_visit_type": "in_person",
+        "labs": [
+            {
+                "name": "CBC",
+                "date": "2025-12-02",
+                "result": "WNL"
+            }
+        ]
+    },
+    "PT-5566": {
+        "patient_id": "PT-5566",
+        "name": "David Kim",
+        "age": 61,
+        "sex": "M",
+        "allergies": [
+            "penicillin"
+        ],
+        "conditions": [
+            "coronary artery disease"
+        ],
+        "current_meds": [
+            "aspirin",
+            "metoprolol"
+        ],
+        "insurance_plan": "ACME-PPO-GOLD",
+        "preferred_clinic": "Cardiology - Main Campus",
+        "preferred_visit_type": "in_person",
+        "labs": [
+            {
+                "name": "EKG",
+                "date": "2025-11-30",
+                "result": "Normal sinus rhythm"
+            }
+        ]
+    },
+    "PT-67890": {
+        "patient_id": "PT-67890",
+        "name": "Emily Chen",
+        "age": 29,
+        "sex": "F",
+        "allergies": [],
+        "conditions": [
+            "asthma"
+        ],
+        "current_meds": [
+            "albuterol inhaler"
+        ],
+        "insurance_plan": "ACME-PPO-GOLD",
+        "preferred_clinic": "Downtown Primary Care",
+        "preferred_visit_type": "telehealth",
+        "labs": [
+            {
+                "name": "Spirometry",
+                "date": "2025-10-18",
+                "result": "Mild obstruction"
+            }
+        ]
+    },
+    "PT-7788": {
+        "patient_id": "PT-7788",
+        "name": "Maria Gonzalez",
+        "age": 47,
+        "sex": "F",
+        "allergies": [],
+        "conditions": [
+            "type 2 diabetes",
+            "obesity"
+        ],
+        "current_meds": [
+            "metformin"
+        ],
+        "insurance_plan": "ACME-HMO-SILVER",
+        "preferred_clinic": "Downtown Primary Care",
+        "preferred_visit_type": "in_person",
+        "labs": [
+            {
+                "name": "HbA1c",
+                "date": "2025-12-01",
+                "result": "7.8%"
+            }
+        ]
+    },
+    "PT-9988": {
+        "patient_id": "PT-9988",
+        "name": "Noah Williams",
+        "age": 41,
+        "sex": "M",
+        "allergies": [],
+        "conditions": [
+            "post-op recovery"
+        ],
+        "current_meds": [
+            "acetaminophen"
+        ],
+        "insurance_plan": "ACME-PPO-GOLD",
+        "preferred_clinic": "Downtown Primary Care",
+        "preferred_visit_type": "in_person",
+        "labs": [
+            {
+                "name": "PT/INR",
+                "date": "2025-11-28",
+                "result": "1.1"
+            }
+        ]
+    }
+}
