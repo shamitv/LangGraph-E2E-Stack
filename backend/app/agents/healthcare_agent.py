@@ -3,6 +3,7 @@ import json
 import re
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage, ToolMessage
+from pydantic import BaseModel, Field
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
@@ -23,6 +24,10 @@ class AgentState(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]
     next: str  # supervisor routing token
     task_type: str  # Track conversation mode (general vs coordination)
+
+class RoutingDecision(BaseModel):
+    task_type: Literal["general", "coordination"] = Field(..., description="The type of task required.")
+    reasoning: str = Field(..., description="Brief reason for the classification.")
 
 class HealthcareAgent(BaseAgent):
     """
@@ -120,15 +125,37 @@ class HealthcareAgent(BaseAgent):
                 return "next two weeks"
         return None
 
+    def _determine_task_type(self, message: str) -> str:
+        """
+        Use LLM to determine if the query is 'general' (data lookup) or 'coordination' (complex planning).
+        """
+        sys = SystemMessage(content=(
+            "Classify the user's request.\n"
+            "- 'general': Simple data lookups (e.g. 'Summarize patient', 'List allergies', 'Check policy', 'Show meds'). "
+            "Use this if the user asks for information that can be retrieved and shown directly.\n"
+            "- 'coordination': Complex workflows (e.g. 'Schedule appointment', 'Create care plan', 'Pre-auth check needing synthesis'). "
+            "Use this if the request involves planning, scheduling, or synthesizing multiple data points into a formal plan.\n\n"
+            "If the request is unclear or mentions an unknown entity with typos (e.g. 'knwo about Noah'), classify as 'general' to let the Data Agent handle the clarification."
+        ))
+        
+        try:
+            structured_llm = self.llm.with_structured_output(RoutingDecision)
+            decision = structured_llm.invoke([sys, HumanMessage(content=message)])
+            print(f"DEBUG: Routing Decision: {decision.task_type} (Reason: {decision.reasoning})")
+            return decision.task_type
+        except Exception as e:
+            print(f"DEBUG: Routing failed, defaulting to 'coordination': {e}")
+            return "coordination"
+
     def _infer_intents(self, text: str) -> dict:
         lower = text.lower()
+        # Helper for Plan steps (still regex based for visual plan, but routing is now LLM)
         return {
             "needs_patient": bool(re.search(r"\bpt-\d+\b", lower)) or "patient" in lower,
             "needs_policy": any(k in lower for k in ["policy", "mri", "ct", "scan", "imaging", "x-ray", "pet"]),
             "needs_coverage": any(k in lower for k in ["coverage", "copay", "insurance", "plan"]),
             "needs_slots": any(k in lower for k in ["appointment", "schedule", "slot", "availability", "visit", "booking"]),
             "needs_meds": any(k in lower for k in ["medication", "meds", "drug", "refill", "prescription", "albuterol", "amoxicillin", "oxycodone", "ibuprofen", "cetirizine"]),
-            "is_general_query": any(k in lower for k in ["summary", "allergies", "list", "show", "what is", "who is", "give me", "know about"]),
         }
 
     def _collect_tool_results(self, messages: List[BaseMessage]) -> list[tuple[str | None, str]]:
@@ -260,13 +287,8 @@ class HealthcareAgent(BaseAgent):
         # Determine Task Type if not set
         task_type = state.get("task_type")
         if not task_type:
-            intents = self._infer_intents(self._latest_user_text(msgs))
-            # If it looks like a simple lookup/summary without scheduling/coordination
-            if intents["is_general_query"] and not (intents["needs_slots"] or intents["needs_policy"] and "pre-auth" in self._latest_user_text(msgs).lower()):
-                task_type = "general"
-            else:
-                task_type = "coordination"
-            print(f"Supervisor inferred intent: {task_type}")
+            task_type = self._determine_task_type(self._latest_user_text(msgs))
+            print(f"Supervisor LLM inferred intent: {task_type}")
 
         # Check for key data points based on tool outputs
         has_patient = self._has_patient_result(msgs)
@@ -283,7 +305,12 @@ class HealthcareAgent(BaseAgent):
         
         # If General Query - Route to Data Agent
         if task_type == "general":
-            # ... (omitted comments for brevity)
+            # If the last message is from Data Agent (AI) and has no tool calls, we are done.
+            last_msg = msgs[-1] if msgs else None
+            if isinstance(last_msg, AIMessage) and not getattr(last_msg, "tool_calls", None):
+                print("Decision: end (data agent finished)")
+                return {"next": "end", "task_type": "general"}
+            
             print("Decision: data_agent")
             return {"next": "data_agent", "task_type": "general"}
 
