@@ -3,17 +3,16 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "langgraph-healthcare-agent"
+name = "agentorchestra-stack"
 version = "0.1.0"
 description = "A LangGraph-based Healthcare Care Coordinator Agent"
 readme = "README.md"
 authors = [
   { name = "Your Name", email = "your.email@example.com" },
 ]
-license = { text = "MIT" }
+license = "MIT"
 classifiers = [
   "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
 ]
 requires-python = ">=3.9"
@@ -36,9 +35,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/<org>/<repo>"
-Repository = "https://github.com/<org>/<repo>"
-Issues = "https://github.com/<org>/<repo>/issues"
+Homepage = "https://github.com/shamitv/LangGraph-E2E-Demo"
+Repository = "https://github.com/shamitv/LangGraph-E2E-Demo"
+Issues = "https://github.com/shamitv/LangGraph-E2E-Demo/issues"
 
 [project.scripts]
 healthcare-agent = "agent_demo_framework.cmdline.healthcare_agent_cli:main"

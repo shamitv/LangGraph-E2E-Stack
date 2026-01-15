@@ -6,7 +6,7 @@ Critically, the package must:
 1.  **Include** all necessary code (`backend/agent_demo_framework`).
 2.  **Include** required data files (`backend/agent_demo_framework/data/mock_db`, `backend/agent_demo_framework/data/policies`) so the agent works out-of-the-box.
 3.  **Exclude** development artifacts (`node_modules`, `venv`, `tests`, `docs`).
-4.  **Install** cleanly via `pip install langgraph-healthcare-agent`.
+4.  **Install** cleanly via `pip install agentorchestra-stack`.
 
 ## 2. Directory Restructuring
 Current structure relies on a repo-root `data/` folder. This is not portable. We will move data inside the package.
@@ -43,7 +43,7 @@ Document the choice and update packaging config accordingly.
 
 ### 2.5 Choose Proper Name
 Confirm the distribution name and import name:
-*   **Distribution name**: `langgraph-healthcare-agent` (pip install name).
+*   **Distribution name**: `agentorchestra-stack` (pip install name).
 *   **Import package**: `agent_demo_framework`.
 
 Assume a full rename from `app` → `agent_demo_framework` across the codebase:
@@ -62,18 +62,17 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "langgraph-healthcare-agent"
+name = "agentorchestra-stack"
 version = "0.1.0"
 description = "A LangGraph-based Healthcare Care Coordinator Agent"
 readme = "README.md"
 authors = [
   { name = "Your Name", email = "your.email@example.com" },
 ]
-license = { text = "MIT" }
+license = "MIT"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
 ]
 requires-python = ">=3.9"
 dependencies = [
@@ -95,9 +94,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/<org>/<repo>"
-Repository = "https://github.com/<org>/<repo>"
-Issues = "https://github.com/<org>/<repo>/issues"
+Homepage = "https://github.com/shamitv/LangGraph-E2E-Demo"
+Repository = "https://github.com/shamitv/LangGraph-E2E-Demo"
+Issues = "https://github.com/shamitv/LangGraph-E2E-Demo/issues"
 
 [project.scripts]
 # NOTE: cmdline/ is now inside backend/agent_demo_framework/.
@@ -217,6 +216,8 @@ Upload to PyPI (or TestPyPI):
 python -m twine upload dist/*
 ```
 
+See [docs/infra/pypi_publish.md](../../infra/pypi_publish.md) for the full packaging and publishing guide.
+
 ## 6. Additional Considerations
 
 ### 6.1 Database Migrations
@@ -261,7 +262,7 @@ jobs:
 4. [x] **Update Config**: Modify `config.py` path logic.
 5. [x] **Update Imports/Docs**: Fix any repo-level `data/` references.
 6. [x] **Create Configs**: Write `pyproject.toml` and `MANIFEST.in`.
-7. [ ] **Validate Deps**: Reconcile `requirements.txt` with `dependencies`.
+7. [x] **Validate Deps**: Reconcile `requirements.txt` with `dependencies`.
 8. [ ] **Build UI & Copy**: Build UI and copy `dist/` + `src/` into `backend/agent_demo_framework/ui/`.
 9. [ ] **Build**: Run `python -m build` from `backend/`.
 10. [ ] **Verify**: Inspect archive contents (no `node_modules`, `venv`, etc.).
