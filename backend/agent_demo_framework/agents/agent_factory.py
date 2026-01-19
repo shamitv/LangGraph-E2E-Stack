@@ -4,6 +4,7 @@ from agent_demo_framework.agents.base_agent import BaseAgent
 from agent_demo_framework.agents.conversational_agent import ConversationalAgent
 from agent_demo_framework.agents.multistep_agent import MultiStepAgent
 from agent_demo_framework.agents.healthcare_agent import HealthcareAgent
+from agent_demo_framework.agents.po_preapproval_agent import POPreApprovalAgent
 
 
 class AgentFactory:
@@ -27,6 +28,7 @@ class AgentFactory:
             "conversational": "conversational",
             "multistep": "multistep",
             "healthcare": "healthcare",
+            "po_preapproval": "po_preapproval",
         }
         
         agent_key = agent_map.get(agent_type, "conversational")
@@ -39,6 +41,8 @@ class AgentFactory:
                 cls._agents[agent_key] = MultiStepAgent()
             elif agent_key == "healthcare":
                 cls._agents[agent_key] = HealthcareAgent()
+            elif agent_key == "po_preapproval":
+                cls._agents[agent_key] = POPreApprovalAgent()
         
         return cls._agents[agent_key]
     
