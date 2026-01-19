@@ -153,7 +153,72 @@ class POPreApprovalAgent(BaseAgent):
              
         return {"next": "end"}
 
-    # ... (skipping context_gatherer, rule_engine) ...
+    async def _general_assistant_node(self, state: AgentState):
+        """Node for handling general queries and greetings."""
+        print("--- GENERAL ASSISTANT NODE ---")
+        sys = SystemMessage(content=(
+             "You are the Agentic Procurement Assistant.\n"
+             "Introduce yourself and your capabilities.\n"
+             "You can:\n"
+             "- Pre-approve Purchase Orders\n"
+             "- Check Vendor Compliance & Sanctions\n"
+             "- Validate Budgets\n"
+             "- Verify Contracts\n"
+             "Ask the user if they would like to submit a PO request."
+        ))
+        ai_msg = await self.llm.ainvoke([sys] + state["messages"])
+        return {"messages": [ai_msg]}
+
+    async def _context_gatherer_node(self, state: AgentState):
+        print("--- CONTEXT GATHERER NODE ---")
+        messages = state["messages"]
+        last_msg = messages[-1]
+        
+        # If we just came back from tools, update memory and finish
+        if isinstance(last_msg, ToolMessage):
+             current_mem = state.get("shared_memory", {}).copy()
+             current_mem["context_gathered"] = True
+             return {"shared_memory": current_mem}
+             
+        # Otherwise, kick off tool calls
+        # For the demo, we'll hardcode the extraction of the "PO details" from the user prompt 
+        # and then call the relevant lookups.
+        
+        user_text = messages[0].content # Simplified: assume first msg is the PO request
+        
+        sys = SystemMessage(content=(
+            "You are a Context Gathering Agent for Procurement.\n"
+            "Analyze the PO Request. Extract vendor_id, cost_center, and potential contract regions.\n"
+            "Call tools: 'vendor_lookup', 'budget_check', 'contract_search', 'vendor_exposure'.\n"
+            "Assume 'V12345' for 'IT Services' if not specified, or infer from text.\n"
+            "Assume 'CC-900' for cost center if not specified."
+        ))
+        
+        # We bind tools so the LLM can call them
+        ai_msg = await self.llm.bind_tools(self.tools).ainvoke([sys] + messages)
+        return {"messages": [ai_msg]}
+
+    async def _rule_engine_node(self, state: AgentState):
+        print("--- RULE ENGINE NODE ---")
+        messages = state["messages"]
+        last_msg = messages[-1]
+        
+        if isinstance(last_msg, ToolMessage):
+             current_mem = state.get("shared_memory", {}).copy()
+             current_mem["rules_checked"] = True
+             return {"shared_memory": current_mem}
+
+        sys = SystemMessage(content=(
+            "You are a Policy & Rule Engine Agent.\n"
+            "Based on the context gathered (visible in tool outputs above), run validation checks.\n"
+            "1. Call 'policy_get' to retrieve active rules.\n"
+            "2. Call 'restricted_list_match' for the vendor.\n"
+            "3. Call 'sanctions_screen' for the vendor.\n"
+            "4. Call 'approval_matrix' to determine approvers."
+        ))
+        
+        ai_msg = await self.llm.bind_tools(self.tools).ainvoke([sys] + messages)
+        return {"messages": [ai_msg]}
 
     async def _decision_maker_node(self, state: AgentState):
         print("--- DECISION MAKER NODE ---")
@@ -180,7 +245,12 @@ class POPreApprovalAgent(BaseAgent):
         print("--- HUMAN REVIEW NODE ---")
         return {"messages": [AIMessage(content="**STATUS**: Workflow paused for Human Review. A supervisor has been notified.")]}
 
-    # ... (skipping process) ...
+    async def process(self, message: str, history: List[BaseMessage]) -> dict:
+        messages = history + [HumanMessage(content=message)]
+        # Init empty shared memory
+        inputs = {"messages": messages, "next": "", "shared_memory": {}}
+        result = await self.graph.ainvoke(inputs, config={"recursion_limit": 20})
+        return {"content": result["messages"][-1].content}
 
     async def astream_events(self, message: str, history: List[BaseMessage]) -> AsyncGenerator[Any, None]:
         # Update Plan
@@ -237,8 +307,6 @@ class POPreApprovalAgent(BaseAgent):
         yield StatusEvent(step_id="decision", status="completed", details="Case closed.")
         yield MessageEvent(content="", is_final=True)
 
-        yield StatusEvent(step_id="decision", status="completed", details="Case closed.")
-        yield MessageEvent(content="", is_final=True)
 
     def get_agent_info(self) -> dict:
         return {
