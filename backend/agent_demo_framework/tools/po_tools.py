@@ -121,6 +121,15 @@ def audit_log_append(event_type: str, details: Dict) -> Dict:
         "hash": "0x123abc..."
     }
 
+@tool("request_human_review")
+def request_human_review(reason: str, context: Dict) -> Dict:
+    """Request human review for a specific decision or ambiguity."""
+    return {
+        "status": "review_requested",
+        "reason": reason,
+        "context_summary": context
+    }
+
 ALL_PO_TOOLS = [
     vendor_lookup,
     sanctions_screen,
@@ -130,5 +139,6 @@ ALL_PO_TOOLS = [
     policy_get,
     restricted_list_match,
     approval_matrix,
-    audit_log_append
+    audit_log_append,
+    request_human_review
 ]
