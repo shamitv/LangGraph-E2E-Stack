@@ -60,7 +60,7 @@ const ChatInterface: React.FC = () => {
       {
         message: inputValue,
         session_id: sessionId,
-        agent_type: 'healthcare',
+        agent_type: 'po_preapproval',
       },
       (event) => {
         if (event.type === 'plan') {

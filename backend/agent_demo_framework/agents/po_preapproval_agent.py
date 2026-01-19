@@ -46,6 +46,7 @@ class POPreApprovalAgent(BaseAgent):
         builder.add_node("context_gatherer", self._context_gatherer_node)
         builder.add_node("rule_engine", self._rule_engine_node)
         builder.add_node("decision_maker", self._decision_maker_node)
+        builder.add_node("general_assistant", self._general_assistant_node)
         builder.add_node("tools", self.tool_node)
         
         builder.set_entry_point("supervisor")
@@ -58,9 +59,12 @@ class POPreApprovalAgent(BaseAgent):
                 "context_gatherer": "context_gatherer",
                 "rule_engine": "rule_engine",
                 "decision_maker": "decision_maker",
+                "general_assistant": "general_assistant",
                 "end": END
             }
         )
+
+        builder.add_edge("general_assistant", END)
         
         # Context Gatherer -> Tools or Supervisor
         builder.add_conditional_edges(
@@ -104,8 +108,28 @@ class POPreApprovalAgent(BaseAgent):
         shared_mem = state.get("shared_memory", {})
         print(f"--- SUPERVISOR NODE (Memory Keys: {list(shared_mem.keys())}) ---")
         
-        # Simple State Machine Logic for the Demo
-        # 1. New Case (empty memory) -> Gather Context
+        # 0. Initial Classification (if memory is empty)
+        if not shared_mem:
+            messages = state["messages"]
+            # Simple heuristic or LLM call to classify intent
+            # Using LLM for better flexibility
+            sys = SystemMessage(content=(
+                "You are a routing supervisor.\n"
+                "Classify the user's input into one of two categories:\n"
+                "1. 'GENERAL': Greetings, asking for help, general questions about capabilities.\n"
+                "2. 'PO_REQUEST': Requesting to submit, validate, or check a Purchase Order/Vendor/Budget.\n"
+                "Return ONLY the category name."
+            ))
+            ai_msg = await self.llm.ainvoke([sys] + messages)
+            intent = ai_msg.content.strip()
+            print(f"DEBUG: Routing Decision: {intent}")
+            
+            if "GENERAL" in intent:
+                return {"next": "general_assistant"}
+            # Else fall through to PO flow
+        
+        # Simple State Machine Logic for the Demo (PO Flow)
+        # 1. New Case (empty memory or just started PO flow) -> Gather Context
         if not shared_mem.get("context_gathered"):
             print("Decision: context_gatherer")
             return {"next": "context_gatherer"}
@@ -118,6 +142,22 @@ class POPreApprovalAgent(BaseAgent):
         # 3. Rules Done -> Make Decision
         print("Decision: decision_maker")
         return {"next": "decision_maker"}
+
+    async def _general_assistant_node(self, state: AgentState):
+        """Node for handling general queries and greetings."""
+        print("--- GENERAL ASSISTANT NODE ---")
+        sys = SystemMessage(content=(
+             "You are the Agentic Procurement Assistant.\n"
+             "Introduce yourself and your capabilities.\n"
+             "You can:\n"
+             "- Pre-approve Purchase Orders\n"
+             "- Check Vendor Compliance & Sanctions\n"
+             "- Validate Budgets\n"
+             "- Verify Contracts\n"
+             "Ask the user if they would like to submit a PO request."
+        ))
+        ai_msg = await self.llm.ainvoke([sys] + state["messages"])
+        return {"messages": [ai_msg]}
 
     async def _context_gatherer_node(self, state: AgentState):
         print("--- CONTEXT GATHERER NODE ---")
@@ -217,8 +257,8 @@ class POPreApprovalAgent(BaseAgent):
                 metadata = event.get("metadata", {})
                 node = metadata.get("langgraph_node")
                 
-                # Stream content from the final decision node
-                if node == "decision_maker":
+                # Stream content from final nodes
+                if node in ["decision_maker", "general_assistant"]:
                      content = event["data"]["chunk"].content
                      if content:
                         yield MessageEvent(content=content, is_final=False)
@@ -241,6 +281,10 @@ class POPreApprovalAgent(BaseAgent):
                      # Ensure previous steps are marked done
                      yield StatusEvent(step_id="rules", status="completed", details="Rules evaluated.")
                      yield StatusEvent(step_id="decision", status="running", details="Drafting outcome...")
+                elif node == "general_assistant":
+                    yield StatusEvent(step_id="context", status="completed", details="General query detected.")
+                    yield StatusEvent(step_id="rules", status="completed", details="Skipped.")
+                    yield StatusEvent(step_id="decision", status="completed", details="Providing info.")
 
         yield StatusEvent(step_id="decision", status="completed", details="Case closed.")
         yield MessageEvent(content="", is_final=True)

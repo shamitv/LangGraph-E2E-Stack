@@ -24,7 +24,7 @@ class AgentFactory:
         """
         # Map agent types to implementations
         agent_map = {
-            "default": "conversational",
+            "default": "po_preapproval",
             "conversational": "conversational",
             "multistep": "multistep",
             "healthcare": "healthcare",
